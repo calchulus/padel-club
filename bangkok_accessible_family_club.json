@@ -1,0 +1,484 @@
+{
+  "meta": {
+    "schema_version": "1.1.0",
+    "source": "preset",
+    "business_name": "Padel Club Bangkok — Accessible family club",
+    "business_description": "3-court rental padel club in Bangkok, Thailand (roof, open sides). Base running cost $100,000/yr. Hourly courts with peak/off-peak pricing, memberships, junior academy, programming, corporate and automated services."
+  },
+  "type_class": "B",
+  "entry_state": {
+    "liquid": 40000,
+    "xp_score": 0,
+    "brand_local": 0.15,
+    "brand_global": 0,
+    "life_budget": 3
+  },
+  "objective": {
+    "metric": "cumulative_revenue",
+    "target_value": 1704037,
+    "time_unit": "month",
+    "horizon_t": 36
+  },
+  "revenue_model": {
+    "streams": [
+      {
+        "id": "court_peak",
+        "label": "Peak court-hours",
+        "price_default": 50,
+        "price_min": 20,
+        "price_max": 90,
+        "price_elasticity": -0.6,
+        "volume_baseline": 284,
+        "conversion_rate": 1,
+        "net_revenue_retention": 1,
+        "expansion_revenue_rate": 0
+      },
+      {
+        "id": "court_offpeak",
+        "label": "Off-peak court-hours",
+        "price_default": 34,
+        "price_min": 10,
+        "price_max": 70,
+        "price_elasticity": -0.9,
+        "volume_baseline": 198,
+        "conversion_rate": 1,
+        "net_revenue_retention": 1,
+        "expansion_revenue_rate": 0
+      },
+      {
+        "id": "membership",
+        "label": "Membership",
+        "price_default": 35,
+        "price_min": 15,
+        "price_max": 120,
+        "price_elasticity": -0.5,
+        "volume_baseline": 161,
+        "conversion_rate": 0.02,
+        "net_revenue_retention": 0.97,
+        "expansion_revenue_rate": 0
+      },
+      {
+        "id": "kids_academy",
+        "label": "Junior academy",
+        "price_default": 70,
+        "price_min": 40,
+        "price_max": 200,
+        "price_elasticity": -0.8,
+        "volume_baseline": 123,
+        "conversion_rate": 0.05,
+        "net_revenue_retention": 0.965,
+        "expansion_revenue_rate": 0
+      }
+    ],
+    "y1_mix": [
+      {
+        "id": "courtPeak",
+        "label": "Peak rentals",
+        "annual_revenue_y1": 112840
+      },
+      {
+        "id": "starter",
+        "label": "Taster sessions",
+        "annual_revenue_y1": 12329
+      },
+      {
+        "id": "courtOff",
+        "label": "Off-peak rentals",
+        "annual_revenue_y1": 49503
+      },
+      {
+        "id": "membership",
+        "label": "Memberships",
+        "annual_revenue_y1": 38223
+      },
+      {
+        "id": "kids",
+        "label": "Kids academy & camps",
+        "annual_revenue_y1": 76011
+      },
+      {
+        "id": "coaching",
+        "label": "Adult coaching",
+        "annual_revenue_y1": 29604
+      },
+      {
+        "id": "programming",
+        "label": "Socials & tournaments",
+        "annual_revenue_y1": 24941
+      },
+      {
+        "id": "corporate",
+        "label": "Corporate packages",
+        "annual_revenue_y1": 11153
+      },
+      {
+        "id": "sponsorship",
+        "label": "Sponsorship",
+        "annual_revenue_y1": 913
+      },
+      {
+        "id": "automation",
+        "label": "Automated services",
+        "annual_revenue_y1": 10356
+      },
+      {
+        "id": "breakage",
+        "label": "Wallet breakage",
+        "annual_revenue_y1": 2944
+      }
+    ]
+  },
+  "cost_model": {
+    "fixed_burn_per_period": 8333,
+    "variable_cost_per_unit": 5,
+    "cogs_rate": 0.025,
+    "step_function_thresholds": [
+      {
+        "volume": 600,
+        "fixed_cost_increase": 900,
+        "label": "Front-desk shift"
+      },
+      {
+        "volume": 1200,
+        "fixed_cost_increase": 900,
+        "label": "Second front-desk shift"
+      },
+      {
+        "volume": 2,
+        "fixed_cost_increase": 2500,
+        "label": "Programme manager (2+ programmes)"
+      }
+    ]
+  },
+  "demand_model": {
+    "base_demand": 220,
+    "weather_sensitivity": 0.25,
+    "competitor_pressure": 0,
+    "marketing_efficiency": 0.029,
+    "viral_coefficient": 0.02,
+    "churn_rate_monthly": 0.07,
+    "seasonality": {
+      "enabled": true,
+      "weekend_multiplier": 1.6,
+      "monthly_index": [
+        1,
+        1,
+        1,
+        0.85,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.95
+      ]
+    },
+    "market_size": 9000
+  },
+  "levers": [
+    {
+      "id": "price",
+      "label": "Peak price / court-hour",
+      "type": "continuous",
+      "min": 20,
+      "max": 90,
+      "default": 50,
+      "step": 1,
+      "unit": "$",
+      "affects": [
+        "price"
+      ]
+    },
+    {
+      "id": "offpeak_price",
+      "label": "Off-peak price",
+      "type": "continuous",
+      "min": 10,
+      "max": 70,
+      "default": 34,
+      "step": 1,
+      "unit": "$",
+      "affects": [
+        "price",
+        "demand"
+      ]
+    },
+    {
+      "id": "ad_spend",
+      "label": "Paid marketing",
+      "type": "continuous",
+      "min": 0,
+      "max": 3000,
+      "default": 800,
+      "step": 100,
+      "unit": "$",
+      "affects": [
+        "demand"
+      ]
+    },
+    {
+      "id": "membership_fee",
+      "label": "Membership / mo",
+      "type": "continuous",
+      "min": 15,
+      "max": 120,
+      "default": 35,
+      "step": 1,
+      "unit": "$",
+      "affects": [
+        "conversion"
+      ]
+    },
+    {
+      "id": "kids_fee",
+      "label": "Academy fee",
+      "type": "continuous",
+      "min": 40,
+      "max": 200,
+      "default": 70,
+      "step": 5,
+      "unit": "$",
+      "affects": [
+        "demand"
+      ]
+    },
+    {
+      "id": "automation",
+      "label": "Automation tier",
+      "type": "segmented",
+      "affects": [
+        "cost",
+        "capacity"
+      ],
+      "options": [
+        {
+          "id": "staffed",
+          "label": "Fully staffed",
+          "cost_modifier": 0,
+          "conversion_modifier": 0
+        },
+        {
+          "id": "smart",
+          "label": "Smart access + dynamic pricing",
+          "cost_modifier": -0.1,
+          "conversion_modifier": 0.05
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "competitor_open",
+      "label": "Competitor club opens",
+      "trigger": {
+        "type": "random",
+        "probability": 0.05,
+        "period_min": 9
+      },
+      "demand_modifier": 0.85,
+      "duration_periods": 0
+    },
+    {
+      "id": "pro_exhibition",
+      "label": "Pro exhibition match",
+      "trigger": {
+        "type": "scheduled",
+        "period": 4
+      },
+      "demand_modifier": 1.3,
+      "duration_periods": 3
+    },
+    {
+      "id": "rainy_season",
+      "label": "Rainy season",
+      "trigger": {
+        "type": "calendar",
+        "months": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "demand_modifier": 0.944,
+      "duration_periods": 1
+    },
+    {
+      "id": "heat_wave",
+      "label": "Heat wave",
+      "trigger": {
+        "type": "random",
+        "probability": 0.1,
+        "period_min": 1
+      },
+      "demand_modifier": 0.85,
+      "duration_periods": 1
+    }
+  ],
+  "achievements": [
+    {
+      "id": "sold_out_evenings",
+      "label": "Sold-out evenings",
+      "condition": {
+        "metric": "peak_utilization",
+        "op": ">=",
+        "value": 0.9
+      },
+      "xp_reward": 0.05
+    },
+    {
+      "id": "customer_funded",
+      "label": "Customer-funded",
+      "condition": {
+        "metric": "prepaid_float",
+        "op": ">=",
+        "value": 50000
+      },
+      "xp_reward": 0.05
+    },
+    {
+      "id": "next_gen",
+      "label": "Next generation",
+      "condition": {
+        "metric": "kids_enrolled",
+        "op": ">=",
+        "value": 100
+      },
+      "xp_reward": 0.05
+    }
+  ],
+  "risk_model": {
+    "constraint_budget": 3,
+    "events": [
+      {
+        "id": "solvency",
+        "trigger": "liquid <= 0",
+        "severity": 1,
+        "label": "Ran out of cash"
+      },
+      {
+        "id": "reputation_loss",
+        "trigger": "brand_local < 0.05",
+        "severity": 0.5,
+        "label": "Lost community trust"
+      }
+    ]
+  },
+  "display": {
+    "icon": "🎾",
+    "currency_symbol": "$",
+    "primary_metric_label": "Revenue goal"
+  },
+  "location": {
+    "id": "bangkok",
+    "city": "Bangkok",
+    "country": "Thailand",
+    "roof": "covered",
+    "local_currency": "฿",
+    "fx_per_usd": 33,
+    "cost_index": 0.7,
+    "office_intensity": 0.6,
+    "visitor_share": 0.25,
+    "peak_windows": {
+      "weekday": [
+        [
+          17,
+          22
+        ]
+      ],
+      "weekend": [
+        [
+          7,
+          10
+        ],
+        [
+          16,
+          22
+        ]
+      ]
+    },
+    "climate": {
+      "monthly_high_c": [
+        32,
+        33,
+        34,
+        35,
+        34,
+        33,
+        33,
+        32,
+        32,
+        32,
+        32,
+        31
+      ],
+      "monthly_rain_days": [
+        2,
+        3,
+        4,
+        6,
+        15,
+        17,
+        19,
+        21,
+        22,
+        16,
+        6,
+        1
+      ]
+    },
+    "visitor_season": [
+      1.3,
+      1.2,
+      1.1,
+      1,
+      0.8,
+      0.8,
+      0.9,
+      0.9,
+      0.8,
+      0.9,
+      1.1,
+      1.3
+    ],
+    "local_calendar": [
+      1,
+      1,
+      1,
+      0.85,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.95
+    ]
+  },
+  "inspector": {
+    "raw_input": null,
+    "assumptions_made": [
+      "Opening month January",
+      "Peak = weekdays 17–23, weekends 10–20",
+      "4 players per court-hour",
+      "Founding seats recognised over 12 months"
+    ],
+    "warnings": [],
+    "fill_sources": {
+      "all": "padel_club_tycoon"
+    },
+    "overrides_by_player": []
+  },
+  "sim_snapshot": {
+    "break_even_month": 3,
+    "y1_revenue": 368817,
+    "y3_ebitda": 322470,
+    "peak_customer_float": 99749,
+    "min_cash": 65800
+  }
+}

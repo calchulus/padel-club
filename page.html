@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Padel Club Tycoon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: operator's sim — confident, numeric, club-floor practical
+   IDEA: the club's weekly booking sheet, every court-hour coloured by who pays for it
+   PICTURE: 7-day x 18-hour sheet, one stripe per court, filling as the club grows
+   COLOUR and TYPE: court blue field, ball-yellow accent, coral for events; Archivo 800 + Archivo
+   LAYOUT: blue hero with finding + sheet; levers rail left, results right; stacks under 900px */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#07122a);--ink:light-dark(#0c1a33,#e7eefc);--mut:light-dark(#53617a,#9fb0cf);--line:light-dark(#dfe5ef,#1d2d4f);--card:light-dark(#f3f6fb,#0d1c3b);
+--court:#1f56b8;--courtD:#0b2b6e;--off:#7da6ea;--ball:#dcef3c;--coral:#f2694d;--teal:#17a196;--corp:#8b6bd9;--auto:#a7b4cc;--neg:#d8413a;--pos:light-dark(#11804a,#4fd08a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Archivo,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-weight:800;line-height:1.05;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,4.2vw,48px)}h2{font-size:clamp(22px,2.4vw,28px);margin-bottom:6px}h3{font-size:17px}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px)}
+.hero{background:var(--courtD);color:#fff;background-image:linear-gradient(180deg,#0b2b6e,#0e3486)}
+.hero .sub{color:#c9d8f6;max-width:70ch;margin:10px 0 0}
+.wrap{max-width:1240px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:22px 0}
+.kpi{background:rgba(255,255,255,.08);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:clamp(20px,2.2vw,28px);font-weight:800;white-space:nowrap}
+.kpi span{font-size:13px;color:#c9d8f6}
+.locbar{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:flex-start;margin-top:20px}
+.cities{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 520px}.roofs{display:flex;gap:6px;flex-wrap:wrap}
+.hero button{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.22);text-align:left;line-height:1.15}
+.cities .exp{flex-basis:100%;font-size:13px;color:#c9d8f6;margin-top:6px}.cities button:not(.focus){min-height:36px;padding:5px 10px;font-size:13px}.cities button.focus{font-size:16px;padding:10px 16px}
+.hero button small{display:block;font-weight:400;font-size:12px;color:#c9d8f6}
+.hero button.on{background:var(--ball);color:#0b2b6e;border-color:var(--ball)}.hero button.on small{color:#2b3f6e}
+.locnote{color:#dbe6fb;margin:12px 0 0;max-width:80ch;font-size:15px}
+.wx{display:grid;grid-template-columns:110px repeat(12,minmax(0,1fr));gap:3px;font-size:13px;align-items:center}
+.wx div{text-align:center;padding:5px 0;border-radius:4px;white-space:nowrap}.wx .h{color:var(--mut);text-align:left}
+.roofCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.roofCards div{background:var(--card);border-radius:10px;padding:12px 14px;font-size:14px;border:2px solid transparent}.roofCards div.on{border-color:var(--court)}
+.roofCards b{display:block;font-size:22px}
+tr.pick{cursor:pointer}tr.pick:hover td{background:var(--card)}tr.cur td{font-weight:700;background:var(--card)}
+@media(max-width:600px){.wx{grid-template-columns:64px repeat(12,minmax(0,1fr));font-size:11px}.roofCards{grid-template-columns:minmax(0,1fr)}}
+.sheetHead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:#dbe6fb}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.fig{position:relative;min-height:340px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+#sheetFig{min-height:420px}
+.mrow{display:flex;align-items:center;gap:10px;font-size:14px;color:#dbe6fb}
+input[type=range]{accent-color:var(--court);width:100%;height:28px}
+.hero input[type=range]{accent-color:var(--ball);width:min(320px,60vw)}
+.main{display:grid;grid-template-columns:330px minmax(0,1fr);gap:28px;max-width:1240px;margin:0 auto}
+aside{align-self:start}
+@media(min-width:901px){aside{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding-right:6px}}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+button{font:600 14px Archivo,sans-serif;min-height:40px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--court)}button.on{background:var(--court);color:#fff;border-color:var(--court)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--ball);outline-offset:2px}
+details.g{border-top:1px solid var(--line);padding:6px 0}
+details.g>summary{font-weight:800;cursor:pointer;padding:8px 0;list-style:none;display:flex;justify-content:space-between}
+details.g>summary::after{content:"+";color:var(--mut)}details.g[open]>summary::after{content:"–"}
+.lv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;padding:5px 0;font-size:14px}
+.lv label{color:var(--ink)}.lv output{font-weight:600;white-space:nowrap;text-align:right}
+.lv input[type=range]{grid-column:1/-1}
+.tg{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px;gap:10px;min-height:40px}
+.tg input{width:22px;height:22px;accent-color:var(--court);flex:none}
+.note{font-size:13px;color:var(--mut)}
+section.blk{padding:26px 0;border-bottom:1px solid var(--line)}
+.lede{color:var(--mut);margin:0 0 12px;max-width:70ch}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.bars .r{display:grid;grid-template-columns:170px minmax(0,1fr) 104px;gap:10px;align-items:center;font-size:14px;padding:4px 0}
+.bars .t{position:relative;height:18px;background:var(--card);border-radius:4px}
+.bars .t i{position:absolute;top:0;bottom:0;border-radius:4px}
+.bars .v{text-align:right;font-weight:600;white-space:nowrap}
+.tag{font-size:12px;color:var(--mut);margin-left:6px}.v .tag{display:block;margin:0;font-weight:400}
+.advice{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.advice li{background:var(--card);border-radius:10px;padding:12px 14px;border-left:4px solid var(--court)}
+.advice li.w{border-left-color:var(--coral)}.advice li.g{border-left-color:var(--teal)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+.sitein input{width:100%;min-width:72px;font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}.sitein select{font:inherit;font-size:14px;padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.sitein td{white-space:normal}#netT select{max-width:210px}#netT input[type=number]{max-width:76px;min-width:56px}#netT td{padding:6px 6px}.sitein input[data-k=name]{min-width:220px}.sitein input[type=number]{max-width:120px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
+tr.tot td{font-weight:800;border-top:2px solid var(--ink)}
+.neg{color:var(--neg)}.pos{color:var(--pos)}
+.ms{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.ms div{background:var(--card);border-radius:10px;padding:10px 12px;font-size:14px}.ms b{display:block;font-size:18px}
+.ms .no b{color:var(--mut)}
+textarea{width:100%;min-height:220px;font:13px/1.45 ui-monospace,Menlo,monospace;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:12px}
+pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
+.small{font-size:13px;color:var(--mut)}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}.two{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.bars .r{grid-template-columns:110px minmax(0,1fr) 78px;font-size:13px}table{font-size:13px}#sheetFig{min-height:300px}}
+@media(prefers-reduced-motion:no-preference){.bars .t i{transition:width .35s ease}}
+</style></head><body>
+<header class="band hero"><div class="wrap">
+  <h1 id="finding">Padel club tycoon</h1>
+  <p class="sub" id="subline">A Tycoonify archetype for a 3-court rental club: hourly courts, automation, kids, brand and prepaid funding, simulated month by month for three years.</p>
+  <div class="locbar"><div class="cities" id="cities" role="group" aria-label="City"></div>
+    <div class="roofs" id="roofs" role="group" aria-label="Roof"></div></div>
+  <p class="locnote" id="locNote"></p>
+  <div class="kpis" id="kpis"></div>
+  <div class="sheetHead">
+    <h3>The booking sheet, an average week in <span id="mLabel">month 19</span></h3>
+    <div class="mrow"><label for="month">Month</label><input id="month" type="range" min="1" max="36" value="19"></div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="fig" id="sheetFig"><svg id="sheet" role="img" aria-label="Weekly booking sheet by court and hour"></svg></div>
+</div></header>
+
+<div class="band"><div class="main">
+<aside>
+  <h2>Levers</h2>
+  <p class="note">Start from a playbook, then tune. Opening month is January; month 0 is the pre-launch presale.</p>
+  <div class="presets" id="presets"></div>
+  <div id="levers"></div>
+  <p class="note" style="margin-top:12px"><button id="reset" type="button">Reset to defaults</button></p>
+</aside>
+<main>
+  <section class="blk" style="padding-top:0"><h2>What to do next</h2><p class="lede">Read off the current run: where the money is stuck and which lever unsticks it.</p><ul class="advice" id="advice"></ul></section>
+
+  <section class="blk"><h2 id="wxTitle">Weather, roof and traffic</h2><p class="lede" id="wxLede"></p>
+    <div class="scroll"><div class="wx" id="wx" style="min-width:560px"></div></div>
+    <h3 style="margin-top:18px">Which roof pays</h3><div class="roofCards" id="roofCards"></div>
+    <h3 style="margin-top:18px">Courts wanted, by hour of day</h3><p class="lede" id="hourLede"></p>
+    <div class="legend" style="color:var(--mut)"><span><i style="background:var(--court)"></i>Weekday</span><span><i style="background:#f2694d"></i>Weekend</span><span><i style="background:none;border-top:2px dashed var(--mut);height:0;width:14px"></i>Courts you have</span></div>
+    <div class="fig" style="min-height:260px"><svg id="hourChart" role="img" aria-label="Court-hours wanted per hour of day, weekday and weekend"></svg></div></section>
+
+  <section class="blk"><h2>Focus markets, then expansion</h2><p class="lede">Bangkok first, Shenzhen second, Kuala Lumpur third, the rest as later expansion. Same club and levers in each city, with its own players, competing courts, prices, cost level, climate and traffic. Pick a row to switch city.</p>
+    <div class="scroll"><table id="cmp"></table></div></section>
+
+  <section class="blk"><h2>Monthly revenue by stream</h2><p class="lede" id="revLede"></p>
+    <div class="legend" id="revLegend" style="color:var(--mut)"></div>
+    <div class="fig"><svg id="revChart" role="img" aria-label="Stacked monthly revenue by stream with opex line"></svg></div></section>
+
+  <section class="blk"><h2>What each upsell is worth</h2>
+    <p class="lede">Each row re-runs the 36 months with that one module switched off (or on, if it is currently off). Left bar: 36-month EBITDA. Right figure: extra cash customers prepay at the peak.</p>
+    <div class="bars" id="impact"></div></section>
+
+  <section class="blk two">
+    <div><h2>Customer-funded capital</h2><p class="lede" id="floatLede"></p>
+      <div class="fig" style="min-height:260px"><svg id="floatChart" role="img" aria-label="Cash balance and customer prepaid float over time"></svg></div>
+      <div class="bars" id="floatMix" style="margin-top:10px"></div></div>
+    <div><h2>Audience to revenue</h2><p class="lede">The funnel in the month picked on the booking sheet.</p>
+      <div class="bars" id="funnel"></div>
+      <h3 style="margin-top:18px">Growth</h3>
+      <div class="fig" style="min-height:220px"><svg id="growth" role="img" aria-label="Players, members, kids over time"></svg></div></div>
+  </section>
+
+  <section class="blk"><h2 id="finTitle">Build cost and funding</h2><p class="lede" id="finLede"></p>
+    <div class="ms" id="finKpis"></div>
+    <div class="two" style="margin-top:16px"><div><h3>Where the upfront money goes</h3><div class="bars" id="capexBars"></div></div>
+    <div><h3>Owner's cumulative cash</h3><div class="fig" style="min-height:220px"><svg id="eqChart" role="img" aria-label="Cumulative owner cash after debt service"></svg></div></div></div>
+    <p class="small" id="finNote"></p>
+    <h3 style="margin-top:22px">Six ways to get courts in this city</h3><p class="small" style="margin-top:0">Same club, levers and city; only how you get the courts changes. The conversion rows use the kind of site picked in the levers; the owner-funded row shows only our fee income.</p>
+    <div class="scroll"><table id="modeCmp"></table></div>
+    <h3 style="margin-top:22px">Which kind of building to convert</h3><p class="small" style="margin-top:0">Each kind of site with its own costs, cooling and roof, on the same club and levers in this city, for the number of courts set in the levers. Pick a row to use it. Treat the indoor rows with care: they only work with at least 6 m clear above the court.</p>
+    <div class="scroll"><table id="siteCmp"></table></div></section>
+
+  <section class="blk"><h2 id="gTitle">Guild and partner courts</h2><p class="lede" id="gLede"></p>
+    <div class="ms" id="gKpis"></div>
+    <div class="two" style="margin-top:16px"><div><h3>Year-3 revenue by source</h3><div class="bars" id="gRev"></div></div>
+    <div><h3>What partner clubs get from us, month 36</h3><div class="ms" id="gGive"></div></div></div>
+    <p class="small" id="gNote"></p></section>
+  <section class="blk"><h2>Network planner</h2><p class="lede">Lay out every site over five years: the guild first, flagship clubs, conversions, satellites, owner-funded courts and acquisitions. Each row runs the full model with the current levers. Sites in the same city share players and newcomers but gain brand and lower overheads, and a guild hands its members to the clubs that open after it. Month 1 is January 2027.</p>
+    <div class="ms" id="nKpis"></div>
+    <div class="scroll" style="margin-top:14px"><table id="netT" class="sitein"></table></div>
+    <p><button type="button" id="netAdd">Add a site</button> <button type="button" id="netReset">Reset to the suggested network</button></p>
+    <div class="two" style="margin-top:8px"><div><h3>Cumulative cash, all sites</h3><div class="fig" style="min-height:240px"><svg id="netChart" role="img" aria-label="Cumulative network cash over 60 months"></svg></div></div>
+    <div><h3>EBITDA by year</h3><div class="bars" id="netYears"></div></div></div>
+    <p class="small" id="netNote"></p></section>
+  <section class="blk"><h2 id="siteTitle">Site picker</h2><p class="lede" id="siteLede"></p>
+    <div class="scroll"><table id="siteIn" class="sitein"></table></div>
+    <div class="scroll" style="margin-top:14px"><table id="siteOut"></table></div>
+    <p class="small">Site rows are sample inputs for a 5 km catchment; replace them with your own figures (population from district data, competitors from Playtomic, MATCHi or maps). Edits are kept in this browser.</p></section>
+
+  <section class="blk"><h2>Calibrate with real booking data</h2><p class="lede">Paste hourly occupancy from your own booking export, or from sampling competitors' public booking grids, and the model reshapes its hourly demand and rescales its overall level to match.</p>
+    <p class="small">One row per hour: <code>daytype,hour,occupancy</code> where daytype is <code>wd</code> (weekday) or <code>we</code> (weekend), hour is 6–23 and occupancy is 0–1 (or a percentage). Matched against month 12 of the current run.</p>
+    <textarea id="calIn" aria-label="Occupancy CSV" style="min-height:140px"></textarea>
+    <p><button id="calApply" type="button">Fit model to this data</button> <button id="calSample" type="button">Fill a sample</button> <button id="calClear" type="button">Clear calibration</button> <span class="small" id="calMsg"></span></p></section>
+
+  <section class="blk"><h2>Annual P&amp;L</h2><div class="scroll"><table id="pnl"></table></div></section>
+  <section class="blk"><h2>Milestones</h2><div class="ms" id="ms"></div></section>
+  <section class="blk"><h2>Export as a Tycoonify archetype</h2>
+    <p class="lede">Same schema as the repo's presets (schema_version 1.1.0, type B "Service / Hourly", monthly periods), filled from the current levers. Paste into the archetype repo or the game's mod import.</p>
+    <p><button id="copy" type="button">Copy JSON</button> <span class="small" id="copied"></span></p>
+    <textarea id="json" readonly aria-label="Archetype JSON"></textarea></section>
+  <section class="blk" style="border:0"><details><summary><b>Assumptions behind the model</b></summary>
+    <div class="small" id="assump"></div></details></section>
+</main>
+</div></div>
+
+<script>
+/*ENGINE*/
+{
+const $=id=>document.getElementById(id);
+const f$=v=>{if(v==null||isNaN(v))return'—';const a=Math.abs(v),s=v<0?'−':'';return a>=1e6?s+'$'+(a/1e6).toFixed(2)+'M':a>=1e4?s+'$'+Math.round(a/1e3)+'k':a>=1e3?s+'$'+(a/1e3).toFixed(1)+'k':s+'$'+Math.round(a)};
+const fn=v=>Math.round(v).toLocaleString('en-US');
+const pct=v=>Math.round(v*100)+'%';
+const STREAMS=[['courtPeak','Peak rentals','#1f56b8'],['starter','Taster sessions','#38b26a'],['courtOff','Off-peak rentals','#7da6ea'],['membership','Memberships','#ff8fb0'],['kids','Kids academy & camps','#dcef3c'],['coaching','Adult coaching','#17a196'],['programming','Socials & tournaments','#f2694d'],['corporate','Corporate packages','#8b6bd9'],['sponsorship','Sponsorship','#c79a2b'],['automation','Automated services','#a7b4cc'],['breakage','Wallet breakage','#5b6b8a']];
+const L=[ // group, id, label, min, max, step, unit
+ ['Courts & demand',[['courts','Courts',2,8,1,''],['baseOpex','Base running cost / yr (3 courts)',50000,200000,5000,'$'],['pricePeak','Peak price / court-hour',20,90,1,'$'],['priceOff','Off-peak price / court-hour',10,70,1,'$'],['market','Padel players in the city you can reach today',100,15000,100,''],['latent','New-to-padel people you can reach (families, office workers)',0,60000,1000,''],['comp','Competing courts in the city today',0,200,1,''],['compGrowth','Competitor court growth / yr',0,1.5,0.05,'f%'],['mktGrowth','Player base growth / month',0,0.08,0.005,'f%1'],['costIdx','Local cost index (× base)',0.4,3,0.05,'x'],['office','Office-worker intensity',0,1,0.05,'f%'],['tourist','Visitor share of players',0,0.9,0.05,'f%'],['mkt','Paid marketing / mo',0,3000,100,'$'],['startCash','Starting cash',0,200000,5000,'$'],['competitor','Competitor opens in month 15']]],
+ ['Entry-level & family padel',[['starterOn','First Rally taster sessions (coach, loaner kit)'],['starterPerWeek','Taster sessions / week',1,20,1,''],['starterPrice','Taster price / person',3,30,1,'$'],['starterSize','Players per taster court',4,8,1,''],['starterConv','Tasters who become regulars',5,50,1,'%'],['miniOn','Mini-padel: split courts for under-8s'],['familyOn','Family plans (parent + child bundle)']]],
+ ['Memberships & prepayment',[['memOn','Memberships'],['memFee','Membership / mo',15,120,1,'$'],['memDisc','Member court discount',0,40,1,'%'],['annualShare','Members paying annually upfront',0,80,5,'%'],['annualDisc','Annual upfront discount',0,30,1,'%'],['foundOn','Founding-member presale'],['foundSeats','Founding seats offered',20,300,10,''],['foundPrice','Founding price / yr',150,900,10,'$'],['walletOn','Prepaid credit wallets'],['walletBonus','Top-up bonus',0,20,1,'%'],['breakage','Unused credit (breakage)',0,15,1,'%']]],
+ ['Kids & schools',[['kidsOn','Junior academy'],['kidsFee','Academy fee / child / mo',40,200,5,'$'],['kidsPerWeek','Sessions / child / week',1,3,1,''],['groupSize','Kids per court',4,8,1,''],['schools','School partnerships',0,10,1,''],['campsOn','Holiday camps (Apr, Jul, Aug, Dec)'],['kidsPrepay','Academy paid per term upfront']]],
+ ['Programming',[['coachOn','Adult coaching'],['lessonPrice','Lesson / hour',30,110,5,'$'],['socialsOn','Americanas & socials'],['socials','Socials / week',1,7,1,''],['socialFee','Social fee / player',5,35,1,'$'],['tourOn','Monthly tournament'],['tourFee','Entry fee / player',10,80,5,'$']]],
+ ['B2B, brand & audience',[['corpOn','Corporate packages'],['corpBD','Corporate sales spend / mo',0,3000,100,'$'],['corpPrice','Package / company / yr',1200,15000,200,'$'],['sponsorOn','Court naming sponsors'],['sponsorCourts','Courts sponsored',1,6,1,''],['sponsorPrice','List price / court / yr',1000,25000,500,'$'],['contentOn','Content & social'],['content','Content spend / mo',0,3000,100,'$'],['proEvent','Pro exhibition (month 4, $5k)']]],
+ ['Build & financing',[['buildOn','Build our own courts on empty land (instead of renting a facility with courts)'],['buildGround','Groundworks on empty land: slab, drainage, power, per court',0,60000,1000,'$'],['courtKit','Court kit + install, per court',8000,90000,1000,'$'],['roofCostCovered','Roof with open sides, per court',5000,120000,1000,'$'],['roofCostIndoor','Enclosed + AC fit-out, per court',10000,200000,1000,'$'],['buildRentCut','Running-cost saving when you own the courts',0,0.6,0.05,'f%'],['fitout','Clubhouse fit-out (reception, changing, café)',0,200000,5000,'$'],['preopen','Pre-opening (hiring, launch, legal)',0,100000,1000,'$'],['debtShare','Share of upfront spend borrowed',0,0.8,0.05,'f%'],['rate','Interest rate',0,0.2,0.005,'f%1'],['termYears','Loan term (years)',1,10,1,''],['exitMult','Exit value (× last-12-month EBITDA)',0,8,0.5,'x']]],
+ ['Conversion site',[['convertOn','Convert an existing site (pick the kind below)'],['siteType','Kind of site'],['convHasRoof','Pitch already has a roof (covered futsal hall)'],['convSlabReuse','Existing concrete base can be levelled, not replaced'],['convClubReuse','Reuse the pitch site\'s reception, changing rooms, parking'],['convStrip','Strip turf, rebound boards, goals, per court',0,15000,500,'$'],['convSlab','New levelled slab + ring beam, per court',0,30000,500,'$'],['convLights','Court lighting + electrics, per court',0,10000,500,'$'],['convContingency','Contingency on site works',0,0.4,0.05,'f%'],['convRentCut','Running-cost saving vs renting a finished padel facility',0,0.6,0.05,'f%'],['convRevshare','Pay the pitch owner a revenue share instead of rent'],['ownerShare','Owner\'s share of court revenue',0.02,0.3,0.01,'f%'],['footfall','People already on site who could try padel / week',0,3000,50,''],['convHVAC','Cooling and ventilation, per court',0,40000,500,'$'],['convFitout','Clubhouse fit-out needed (share of a full one)',0,1,0.05,'f%'],['ownerCapex','Share of build paid by the host (school, mall)',0,1,0.05,'f%'],['closedDay','Host uses the courts on weekdays until 16:00'],['moveEvery','Move the courts every (months, 0 = never)',0,60,6,''],['moveTeardown','Take down, per court',0,15000,500,'$'],['moveBase','New base at the next site, per court',0,20000,500,'$'],['moveReinstall','Reinstall + transport, per court',0,15000,500,'$'],['moveRoof','Move the canopy, per court',0,30000,500,'$'],['moveKitLoss','Glass and parts lost per move (share of kit)',0,0.3,0.01,'f%'],['moveDown','Weeks closed per move',0,12,1,''],['moveChurn','Casual players lost per move',0,0.5,0.05,'f%']]],
+ ['Buy or operate for an owner',[['acquireOn','Buy an existing, struggling club instead'],['acqPerCourt','Price paid per court',0,80000,1000,'$'],['acqRefurb','Refurbishment per court',0,30000,500,'$'],['acqPlayers','Players who come with the club',0,800,10,''],['mgmtFee','Our management fee on owner-funded courts (share of revenue)',0,0.2,0.01,'f%'],['mgmtIncentive','Our share of owner-funded club EBITDA',0,0.5,0.05,'f%']]],
+ ['Guild & partner courts',[['guildStart','Guild members at launch (from presale and user base)',0,2000,10,''],['guildNew','New members a month, organic',0,300,5,''],['guildMkt','Guild marketing / mo',0,3000,100,'$'],['guildFee','Guild membership / mo',0,40,1,'$'],['eventsPerWeek','Guild socials and leagues / week on partner courts',0,30,1,''],['eventFee','Event fee / player',0,40,1,'$'],['blockDisc','Discount for buying partner courts in blocks',0,0.6,0.05,'f%'],['affRate','Commission from partner clubs on member bookings',0,0.25,0.01,'f%'],['memberHrs','Court-hours a member books at partners / mo',0,4,0.1,''],['bounty','Referral bounty per new player brought to a partner',0,50,1,'$'],['acadHrsWk','Partner court-hours / week for our academy',0,60,1,''],['guildStaff','Community manager cost / mo',0,6000,100,'$']]],
+ ['Calibration',[['demandScale','Demand scale (1 = model as built)',0.3,1.5,0.05,'x'],['overheadPct','Overheads that grow with revenue',0,0.3,0.01,'f%'],['academyFill','Academy slots that actually fill',0.3,1,0.05,'f%']]],
+ ['Automation',[['smartAccess','Smart access, unstaffed 6–7am & 11pm'],['dynPricing','Dynamic pricing engine'],['replay','AI replay cameras ($6 a clip)'],['ballMachine','Ball-machine practice hire'],['vending','Smart vending: drinks, balls, grips']]]
+];
+const OFF={starterOn:0,miniOn:0,familyOn:0,memOn:0,foundOn:0,walletOn:0,kidsOn:0,coachOn:0,socialsOn:0,tourOn:0,corpOn:0,sponsorOn:0,smartAccess:0,dynPricing:0,replay:0,ballMachine:0,vending:0,contentOn:0,proEvent:0,campsOn:0,kidsPrepay:0};
+const PRESETS={
+ 'Full stack':{},
+ 'Bare rental':Object.assign({},OFF,{mkt:500}),
+ 'Community club':Object.assign({},OFF,{memOn:1,coachOn:1,socialsOn:1,socials:4,tourOn:1,contentOn:1,content:500,mkt:600}),
+ 'Kids first':Object.assign({},OFF,{kidsOn:1,schools:5,campsOn:1,kidsPrepay:1,coachOn:1,memOn:1,contentOn:1,content:300}),
+ 'Customer-funded launch':Object.assign({},OFF,{memOn:1,foundOn:1,foundSeats:200,foundPrice:420,annualShare:50,annualDisc:15,walletOn:1,walletBonus:12,kidsOn:1,kidsPrepay:1,schools:2,corpOn:1,corpBD:800,sponsorOn:1,sponsorCourts:3,contentOn:1,content:400}),
+ 'Accessible family club':Object.assign({},OFF,{starterOn:1,starterPerWeek:8,miniOn:1,familyOn:1,kidsOn:1,kidsFee:70,schools:4,campsOn:1,kidsPrepay:1,coachOn:1,memOn:1,memFee:35,annualShare:40,foundOn:1,foundPrice:300,walletOn:1,socialsOn:1,socials:4,socialFee:10,corpOn:1,sponsorOn:1,smartAccess:1,dynPricing:1,contentOn:1,content:400}),
+ 'Pitch conversion (family club)':Object.assign({},OFF,{starterOn:1,starterPerWeek:8,miniOn:1,familyOn:1,kidsOn:1,kidsFee:70,schools:4,campsOn:1,kidsPrepay:1,coachOn:1,memOn:1,memFee:35,annualShare:40,foundOn:1,foundPrice:300,walletOn:1,socialsOn:1,socials:4,socialFee:10,corpOn:1,sponsorOn:1,smartAccess:1,dynPricing:1,contentOn:1,content:400,capexMode:'convert'}),
+ 'Automated lean':Object.assign({},OFF,{smartAccess:1,dynPricing:1,replay:1,ballMachine:1,vending:1,walletOn:1,memOn:1,mkt:700})
+};
+Object.assign(DEF,GDEF);
+let P=null;let cur='Accessible family club';
+try{const s=JSON.parse(localStorage.getItem('padelTycoon3')||'null');if(s&&s.P){P=Object.assign({},DEF,s.P);cur=s.cur||null}}catch(e){}
+const save=()=>{try{localStorage.setItem('padelTycoon3',JSON.stringify({P,cur}))}catch(e){}};
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const LK=()=>LOCS[P.loc]||LOCS.shenzhen;
+const loc$=v=>{const L=LK(),x=v*L.fx;return L.ccy+(x>=10000?Math.round(x/1000).toLocaleString('en-US')+'k':Math.round(x/(x>=200?10:1))*(x>=200?10:1))};
+const fmtLv=(v,u,id)=>u==='$'?f$(v)+((id==='pricePeak'||id==='priceOff'||id==='memFee'||id==='kidsFee'||id==='starterPrice')&&LK().ccy!=='$'?` · ${loc$(v)}`:''):u==='%'?v+'%':u==='f%'?Math.round(v*100)+'%':u==='f%1'?(v*100).toFixed(1)+'%':u==='x'?(+v).toFixed(2)+'×':u==='f%1'?(v*100).toFixed(1)+'%':fn(v);
+const cityParams=(id,roof)=>{const L=LOCS[id],pr=ROOFS[roof].premium;return {proxOverride:null,calib:null,baseOpex:100000,courts:3,loc:id,roof,pricePeak:Math.round(L.peak*pr),priceOff:Math.round(L.off*pr),market:L.market,costIdx:L.costIdx,office:L.office,tourist:L.tourist,latent:L.latent,comp:L.comp,compGrowth:L.compGrowth,mktGrowth:L.mktGrowth,startPlayers:L.start||150,starterPrice:Math.max(3,Math.round(9*L.peak/42))}};
+const CITYKEYS=['proxOverride','calib','baseOpex','courts','loc','roof','pricePeak','priceOff','market','costIdx','office','tourist','latent','comp','compGrowth','mktGrowth','startPlayers','starterPrice'];
+const keepCity=()=>Object.fromEntries(CITYKEYS.map(k=>[k,P[k]]));
+if(!P)P=Object.assign({},DEF,PRESETS['Accessible family club'],cityParams('bangkok','covered'));
+
+
+function renderLevers(){
+  $('presets').innerHTML=Object.keys(PRESETS).map(k=>`<button type="button" class="${k===cur?'on':''}" data-p="${k}">${k}</button>`).join('');
+  $('levers').innerHTML=L.map(([g,items],gi)=>`<details class="g" ${gi<3?'open':''}><summary>${g}</summary>${items.map(([id,lab,mn,mx,st,u])=>id==='siteType'
+    ?`<div class="lv"><label for="lv_siteType">${lab}</label><select id="lv_siteType" data-id="siteType" style="grid-column:1/-1;font:inherit;font-size:14px;padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)">${Object.entries(SITETYPES).map(([k,v])=>`<option value="${k}" ${k===P.siteType?'selected':''}>${v.label}</option>`).join('')}</select></div>`
+    :mn===undefined
+    ?`<label class="tg" for="lv_${id}"><span>${lab}</span><input type="checkbox" id="lv_${id}" data-id="${id}" ${(id==='buildOn'?P.capexMode==='build':id==='convertOn'?P.capexMode==='convert':id==='acquireOn'?P.capexMode==='acquire':P[id])?'checked':''}></label>`
+    :`<div class="lv"><label for="lv_${id}">${lab}</label><output id="o_${id}">${fmtLv(P[id],u,id)}</output><input type="range" id="lv_${id}" data-id="${id}" data-u="${u}" min="${mn}" max="${id==='sponsorCourts'?P.courts:mx}" step="${st}" value="${P[id]}"></div>`).join('')}</details>`).join('');
+}
+$('presets').addEventListener('click',e=>{const k=e.target.closest('button')?.dataset.p;if(!k)return;cur=k;P=Object.assign({},DEF,PRESETS[k],keepCity());renderLevers();run()});
+function renderLoc(){const L=LK();
+  const chip=([id,c])=>`<button type="button" data-c="${id}" class="${id===P.loc?'on':''}${c.tier<9?' focus':''}" aria-pressed="${id===P.loc}">${c.city}<small>${c.tier<9?['','Focus 1 · ','Focus 2 · ','Third · '].at(c.tier):''}${c.country}</small></button>`;
+  const E=Object.entries(LOCS);$('cities').innerHTML=E.filter(([,c])=>c.tier<9).sort((a,b)=>a[1].tier-b[1].tier).map(chip).join('')+`<span class="exp">Additional expansion</span>`+E.filter(([,c])=>c.tier>=9).map(chip).join('');
+  $('roofs').innerHTML=Object.entries(ROOFS).map(([id,r])=>`<button type="button" data-r="${id}" class="${id===P.roof?'on':''}" aria-pressed="${id===P.roof}">${r.label}<small>${id==='outdoor'?'cheapest, weather-exposed':id==='covered'?'rain + shade':'AC, +15% price tolerance'}</small></button>`).join('');
+  $('locNote').textContent=`${L.city}, ${L.country}. ${L.note}${L.est?' Local court prices here are an estimate; set your own.':''}`;}
+$('cities').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;Object.assign(P,cityParams(b.dataset.c,P.roof));renderLoc();renderLevers();run()});
+$('roofs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const old=ROOFS[P.roof].premium,nw=ROOFS[b.dataset.r].premium;P.roof=b.dataset.r;P.pricePeak=Math.round(P.pricePeak*nw/old);P.priceOff=Math.round(P.priceOff*nw/old);renderLoc();renderLevers();run()});
+$('levers').addEventListener('input',e=>{const el=e.target,id=el.dataset.id;if(!id)return;if(id==='siteType'){applySite(el.value);return;}if(id==='buildOn'||id==='convertOn'||id==='acquireOn'){P.capexMode=el.checked?{buildOn:'build',convertOn:'convert',acquireOn:'acquire'}[id]:'rent';['buildOn','convertOn','acquireOn'].filter(k=>k!==id).forEach(k=>{const o=$('lv_'+k);if(o)o.checked=false});}else P[id]=el.type==='checkbox'?(el.checked?1:0):+el.value;
+  if(el.type!=='checkbox')$('o_'+id).textContent=fmtLv(P[id],el.dataset.u,id);
+  if(id==='courts'){P.sponsorCourts=Math.min(P.sponsorCourts,P.courts);const s=$('lv_sponsorCourts');s.max=P.courts}
+  cur=null;document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));run()});
+function applySite(k){const st=SITETYPES[k];if(!st)return;const old=ROOFS[P.roof].premium,nw=ROOFS[st.p.roof].premium;Object.assign(P,st.p,{siteType:k,capexMode:'convert'});P.pricePeak=Math.round(P.pricePeak*nw/old);P.priceOff=Math.round(P.priceOff*nw/old);cur=null;renderLoc();renderLevers();run()}
+$('reset').onclick=()=>{P=Object.assign({},DEF,PRESETS['Accessible family club'],cityParams('bangkok','covered'));cur='Accessible family club';renderLoc();renderLevers();run()};
+$('month').addEventListener('input',()=>{drawSheet();drawFunnel();drawHours()});
+
+const COL={rent:'#4a86f5',off:'#a8c5f7',tour:'#f4c38f',starter:'#38b26a',kids:'#dcef3c',social:'#f2694d',coach:'#17a196',corp:'#8b6bd9',auto:'#c9d3e6'};
+$('legend').innerHTML=[['rent','Peak rental'],['off','Off-peak rental'],['tour','Visitors'],['kids','Kids academy & camps'],['starter','Taster sessions'],['social','Socials & tournaments'],['coach','Coaching & ball machine'],['corp','Corporate']].map(([k,l])=>`<span><i style="background:${COL[k]}"></i>${l}</span>`).join('')+'<span><i style="background:rgba(3,12,38,.55);outline:1px solid rgba(255,255,255,.3)"></i>Empty</span><span><i style="background:#f2694d"></i>Weather row: demand lost to heat, cold or rain (weekday)</span>';
+$('revLegend').innerHTML=STREAMS.map(([,l,c])=>`<span><i style="background:${c}"></i>${l}</span>`).join('')+'<span><i style="background:none;border-top:2px dashed var(--coral);height:0;width:14px"></i>Opex</span>';
+
+let R=null,BASE=null;
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function fig(svg,draw){const ro=new ResizeObserver(()=>draw(svg.clientWidth,svg.clientHeight));ro.observe(svg);return ()=>draw(svg.clientWidth,svg.clientHeight)}
+const TYPES=['kids','starter','social','corp','coach','tour','rent'];
+const drawSheet=fig($('sheet'),(W,H)=>{if(!R||!W)return;const m=+$('month').value;const o=R.out[m];
+  $('mLabel').textContent=`month ${m} (${MON[o.moy-1]}, ${o.T}°C highs, ${o.rd} rain days)`;
+  const courts=R.p.courts,narrow=W<520,get=(dt,h)=>o.slots.find(x=>x.dt===dt&&x.h===h);
+  const lw=narrow?40:58,top=22,cw=(W-lw)/18,rows=8,rh=(H-top-4)/rows,pad=narrow?1:2;
+  let s='';for(let h=6;h<=23;h++){if(!narrow||h%3===0)s+=`<text x="${lw+(h-6)*cw+cw/2}" y="14" fill="#c9d8f6" font-size="12" text-anchor="middle">${narrow?h:(h<10?'0':'')+h+':00'}</text>`}
+  for(let d=0;d<7;d++){const y=top+d*rh,dt=d<5?'wd':'we';s+=`<text x="0" y="${y+rh/2+4}" fill="#fff" font-size="13" font-weight="600">${DAYS[d]}</text>`;
+    for(let h=6;h<=23;h++){const x=lw+(h-6)*cw,sl=get(dt,h),ch=(rh-6)/courts;
+      const per=sl.days*WK,n={kids:sl.kids/per,starter:sl.starter/per,social:sl.social/per,corp:sl.corp/per,coach:sl.coach/per,tour:sl.tour/per,rent:(sl.rent-sl.tour)/per};
+      const E=TYPES.reduce((a,k)=>a+n[k],0),u=((d*0.618+h*0.381)%1),busy=Math.min(courts,Math.floor(E+u));
+      for(let c=0;c<courts;c++){let t=null;if(sl.open&&c<busy&&E>0){let acc=0;const target=(c+0.5)/busy*E;for(const k of TYPES){acc+=n[k];if(acc>=target){t=k;break}}t=t||'rent'}
+        const col=t==='rent'?(sl.pk?COL.rent:COL.off):t?COL[t]:null;
+        const fill=!sl.open?'rgba(0,0,0,.22)':col||'rgba(3,12,38,.55)';
+        s+=`<rect x="${x+pad}" y="${y+3+c*ch+.5}" width="${cw-pad*2}" height="${ch-1}" rx="2" fill="${fill}"/>`}
+      const prev=get(dt,h-1);if(sl.pk&&(!prev||!prev.pk))s+=`<line x1="${x}" x2="${x}" y1="${y+1}" y2="${y+rh-1}" stroke="#dcef3c" stroke-width="2"/>`}}
+  const y=top+7*rh+4;s+=`<text x="0" y="${y+rh/2}" fill="#c9d8f6" font-size="12">${narrow?'Wx':'Weather'}</text>`;
+  for(let h=6;h<=23;h++){const sl=get('wd',h),x=lw+(h-6)*cw,loss=Math.max(0,1-sl.wf);
+    s+=`<rect x="${x+pad}" y="${y}" width="${cw-pad*2}" height="${rh-10}" rx="3" fill="#f2694d" fill-opacity="${Math.min(.9,loss*1.4).toFixed(2)}" stroke="rgba(255,255,255,.12)"/>`;
+    if(!narrow&&loss>=.1)s+=`<text x="${x+cw/2}" y="${y+(rh-10)/2+4}" fill="#fff" font-size="11" text-anchor="middle">−${Math.round(loss*100)}%</text>`}
+  $('sheet').innerHTML=s;});
+
+function lines(svg,series,opts){return fig(svg,(W,H)=>{if(!R||!W)return;const n=R.out.length-1,l=56,r=14,t=22,b=24;
+  const all=series.flatMap(x=>x.v);let mx=Math.max(...all,1),mn=Math.min(0,...all);const y=v=>t+(H-t-b)*(1-(v-mn)/(mx-mn)),x=i=>l+(W-l-r)*(i/n);
+  let s='';for(let k=0;k<=4;k++){const v=mn+(mx-mn)*k/4;s+=`<line x1="${l}" x2="${W-r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${l-6}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="var(--mut)">${opts.fmt(v)}</text>`}
+  for(let m=0;m<=n;m+=12)s+=`<text x="${x(m)}" y="${H-6}" font-size="12" text-anchor="${m===n?'end':m?'middle':'start'}" fill="var(--mut)">${m?('Y'+m/12):'Open'}</text>`;
+  if(mn<0)s+=`<line x1="${l}" x2="${W-r}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink)"/>`;
+  for(const se of series){s+=`<path d="${se.v.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="${se.c}" stroke-width="2.5" ${se.dash?'stroke-dasharray="5 4"':''}/>`;
+    const lv=se.v[n];s+=`<text x="${W-r-4}" y="${Math.max(14,y(lv)-6)}" font-size="12" text-anchor="end" fill="${se.c}" font-weight="700">${se.name}</text>`}
+  svg.innerHTML=s;})}
+let drawFloat,drawGrowth;
+function makeLineCharts(){
+  drawFloat=lines($('floatChart'),[{name:'Cash',c:'var(--court)',get v(){return R.out.map(o=>o.cash)}},{name:'Customer prepaid',c:'#f2694d',dash:1,get v(){return R.out.map(o=>o.float||0)}}],{fmt:f$});
+  drawGrowth=lines($('growth'),[{name:'Active players',c:'var(--court)',get v(){return R.out.map(o=>o.players||R.p.startPlayers)}},{name:'Members',c:'#f2694d',get v(){return R.out.map(o=>o.members||o.found||0)}},{name:'Kids',c:'#b9c92a',get v(){return R.out.map(o=>o.K||0)}}],{fmt:v=>fn(v)});
+}
+const drawRev=fig($('revChart'),(W,H)=>{if(!R||!W)return;const ms=R.out.slice(1),n=ms.length,l=56,r=8,t=10,b=24;
+  const mx=Math.max(...ms.map(o=>Math.max(o.revenue,o.opex)))*1.05,y=v=>t+(H-t-b)*(1-v/mx),bw=(W-l-r)/n;
+  let s='';for(let k=0;k<=4;k++){const v=mx*k/4;s+=`<line x1="${l}" x2="${W-r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${l-6}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="var(--mut)">${f$(v)}</text>`}
+  ms.forEach((o,i)=>{let acc=0;const x=l+i*bw+1;for(const [k,,c] of STREAMS){const v=Math.max(0,o.rev[k]);if(v<=0)continue;s+=`<rect x="${x}" y="${y(acc+v)}" width="${Math.max(1,bw-2)}" height="${y(acc)-y(acc+v)}" fill="${c}"><title>Month ${o.m}: ${k} ${f$(v)}</title></rect>`;acc+=v}
+    if(o.m%6===0)s+=`<text x="${x+bw/2}" y="${H-6}" font-size="12" text-anchor="middle" fill="var(--mut)">M${o.m}</text>`});
+  s+=`<path d="${ms.map((o,i)=>(i?'L':'M')+(l+i*bw+bw/2).toFixed(1)+' '+y(o.opex).toFixed(1)).join('')}" fill="none" stroke="#f2694d" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+  $('revChart').innerHTML=s;});
+
+function weatherTable(){const L=LK(),roofNow=P.roof;
+  const play=(m,rf)=>{let a=0,c=0;for(const dt of ['wd','we'])for(let h=7;h<=22;h++){const w=residentWeight(dt,h,P.office)*(dt==='wd'?5:2);a+=w*weatherFactor(h,L.hi[m],L.rain[m],ROOFS[rf]);c+=w}return a/c};
+  const cell=(v,bg,fg)=>`<div style="background:${bg};color:${fg||'var(--ink)'}">${v}</div>`;
+  const tCol=t=>t>=36?'#d8413a':t>=32?'#f2694d':t>=28?'#f4a27f':t>=20?'#f6d9b8':t>=12?'#cfe0f7':'#8fb3ee';
+  let h=`<div class="h"></div>`+MON.map(m=>`<div class="h" style="text-align:center">${m}</div>`).join('');
+  h+=`<div class="h">High °C</div>`+L.hi.map(t=>cell(t,tCol(t),t>=32?'#fff':'#0c1a33')).join('');
+  h+=`<div class="h">Rain days</div>`+L.rain.map(r=>cell(r,`rgba(31,86,184,${Math.min(.85,r/24).toFixed(2)})`,r>12?'#fff':'var(--ink)')).join('');
+  for(const rf of ['outdoor','covered','indoor']){h+=`<div class="h">${rf===roofNow?'<b>':''}${{outdoor:'Open-air',covered:'Roof',indoor:'Indoor AC'}[rf]}${rf===roofNow?'</b>':''}</div>`+L.hi.map((_,m)=>{const v=play(m,rf);return cell(Math.round(v*100)+'%',`rgba(23,161,150,${Math.max(.08,Math.min(.9,(v-.4)*1.3)).toFixed(2)})`,v>.85?'#fff':'var(--ink)')}).join('')}
+  h+=`<div class="h">Visitors</div>`+L.tSeason.map(v=>cell(v.toFixed(1)+'×',`rgba(244,195,143,${Math.min(.9,P.tourist*v*1.6).toFixed(2)})`)).join('');
+  h+=`<div class="h">Local calendar</div>`+L.cal.map(v=>cell(v<1?Math.round(v*100)+'%':'·',v<1?`rgba(216,65,58,${((1-v)*1.6).toFixed(2)})`:'transparent')).join('');
+  $('wx').innerHTML=h;
+  const worst=L.hi.map((_,m)=>play(m,'outdoor')),wm=worst.indexOf(Math.min(...worst));
+  $('wxTitle').textContent=`Weather, roof and traffic in ${L.city}`;
+  $('wxLede').textContent=`Share of resident demand that still turns up, month by month, for each roof. Open-air courts here bottom out at ${Math.round(worst[wm]*100)}% in ${MON[wm]}. Above 100% means a sheltered club picks up players rained off open courts. Visitor and holiday rows scale demand on top of the weather.`;}
+function roofCards(){const out=Object.keys(ROOFS).map(rf=>{const k=ROOFS[rf].premium/ROOFS[P.roof].premium,r=sim(Object.assign({},P,{roof:rf,pricePeak:Math.round(P.pricePeak*k),priceOff:Math.round(P.priceOff*k)}));return {rf,r}});
+  const best=out.reduce((a,b)=>b.r.years[2].ebitda>a.r.years[2].ebitda?b:a);
+  $('roofCards').innerHTML=out.map(({rf,r})=>`<div class="${rf===P.roof?'on':''}"><b>${f$(r.years[2].ebitda)}</b>Year 3 EBITDA, ${ROOFS[rf].label.toLowerCase()}<br><span class="small">Peak ${f$(r.p.pricePeak)}/h · running cost ×${ROOFS[rf].opex}${rf==='indoor'?' + AC power':''} · off-peak ${pct(r.out[24].offFill)} full${rf===best.rf?' · <b style="display:inline;font-size:inherit">best here</b>':''}</span></div>`).join('');
+  return best;}
+const drawHours=fig($('hourChart'),(W,H)=>{if(!R||!W)return;const o=R.out[+$('month').value],l=40,r=10,t=12,b=26,courts=R.p.courts;
+  const want=dt=>{const a=[];for(let h=6;h<=23;h++){const x=o.slots.find(z=>z.dt===dt&&z.h===h),per=x.days*WK;a.push((x.dem+x.kids+x.starter+x.social+x.corp+x.coach)/per)}return a};
+  const wd=want('wd'),we=want('we'),mx=Math.max(courts*1.3,...wd,...we);const X=i=>l+(W-l-r)*i/17,Y=v=>t+(H-t-b)*(1-v/mx);
+  let s='';for(let k=0;k<=Math.ceil(mx);k++){s+=`<line x1="${l}" x2="${W-r}" y1="${Y(k)}" y2="${Y(k)}" stroke="var(--line)"/><text x="${l-6}" y="${Y(k)+4}" font-size="12" text-anchor="end" fill="var(--mut)">${k}</text>`}
+  for(let i=0;i<18;i+=W<520?3:2)s+=`<text x="${X(i)}" y="${H-8}" font-size="12" text-anchor="middle" fill="var(--mut)">${(6+i<10?'0':'')+(6+i)}:00</text>`;
+  s+=`<line x1="${l}" x2="${W-r}" y1="${Y(courts)}" y2="${Y(courts)}" stroke="var(--mut)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  const path=(a,c)=>`<path d="${a.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join('')}" fill="none" stroke="${c}" stroke-width="3"/>`;
+  s+=`<path d="${wd.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(Math.max(v,courts)).toFixed(1)).join('')}L${X(17)} ${Y(courts)}L${X(0)} ${Y(courts)}Z" fill="var(--court)" fill-opacity=".14"/>`;
+  s+=path(wd,'var(--court)')+path(we,'#f2694d');$('hourChart').innerHTML=s;
+  const pk=wd.indexOf(Math.max(...wd)),over=wd.filter(v=>v>courts).length;
+  $('hourLede').textContent=`Month ${o.m}: weekday demand peaks at ${(6+pk)}:00 with ${wd[pk].toFixed(1)} courts wanted against ${courts} you have${over?`, over capacity for ${over} hour${over>1?'s':''} a day`:''}. Includes kids, coaching, socials and corporate bookings. The shaded area is demand you can't serve.`;});
+function compare(){compare.h=0;const rows=Object.entries(LOCS).map(([id,L])=>{const base=Object.assign({},P,cityParams(id,P.roof));const r=sim(base);
+    const roofs=Object.keys(ROOFS).map(rf=>({rf,e:rf===P.roof?r.years[2].ebitda:sim(Object.assign({},P,cityParams(id,rf))).years[2].ebitda}));const best=roofs.reduce((a,b)=>b.e>a.e?b:a);
+    const noEntry=L.tier<9?sim(Object.assign({},base,{starterOn:0,miniOn:0,familyOn:0})).years[2].ebitda:null;
+    return {id,L,r,best,noEntry}}).sort((a,b)=>(a.L.tier-b.L.tier)||(b.r.years[2].ebitda-a.r.years[2].ebitda));
+  $('cmp').innerHTML=`<thead><tr><th>City</th><th>Competing courts, now → M36</th><th>Entry-level track adds, Y3</th><th>Peak / off-peak</th><th>Cost index</th><th>Year 1 revenue</th><th>Year 3 EBITDA</th><th>Break-even</th><th>Peak / off full, M24</th><th>Visitors</th><th>Best roof, Y3</th></tr></thead><tbody>`+
+   rows.map(({id,L,r,best,noEntry})=>{const o=r.out[24];const lp=v=>{const x=v*L.fx;return L.ccy+(x>=10000?Math.round(x/1000)+'k':Math.round(x))};
+    const head=(L.tier>=9&&!compare.h)?(compare.h=1,`<tr><td colspan="12" class="small" style="text-align:left;padding-top:14px"><b>Additional expansion</b> · rough profiles, no competition data</td></tr>`):'';
+    return head+`<tr class="pick ${id===P.loc?'cur':''}" data-c="${id}" tabindex="0"><td>${L.tier<9?'<b>':''}${L.city}${L.tier<9?'</b>':''}<br><span class="small">${L.tier<9?['','Focus 1 · ','Focus 2 · ','Third · '].at(L.tier):''}${L.country}</span></td><td>${L.tier<9?`${fn(L.comp)} → ${fn(r.out[36].compCourts)}`:'—'}</td><td>${noEntry==null?'—':`<span class="${r.years[2].ebitda-noEntry<0?'neg':'pos'}">${f$(r.years[2].ebitda-noEntry)}</span>`}</td><td>${lp(r.p.pricePeak)} / ${lp(r.p.priceOff)}</td><td>${L.costIdx.toFixed(2)}×</td><td>${f$(r.years[0].revenue)}</td><td class="${r.years[2].ebitda<0?'neg':''}">${f$(r.years[2].ebitda)}</td><td>${r.breakEven?'M'+r.breakEven:'—'}</td><td>${pct(o.peakFill)} / ${pct(o.offFill)}</td><td>${pct(o.touristShare)}</td><td>${{outdoor:'Open-air',covered:'Roof',indoor:'Indoor AC'}[best.rf]} ${f$(best.e)}</td></tr>`}).join('')+'</tbody>';}
+$('cmp').addEventListener('click',e=>{const tr=e.target.closest('tr[data-c]');if(!tr)return;Object.assign(P,cityParams(tr.dataset.c,P.roof));renderLoc();renderLevers();run();window.scrollTo({top:0,behavior:'smooth'})});
+$('cmp').addEventListener('keydown',e=>{if(e.key==='Enter'){const tr=e.target.closest('tr[data-c]');if(tr)tr.click()}});
+function finance(){const F=R.fin,L=LK(),cur=v=>`${f$(v)}${L.ccy!=='$'?` · ${loc$(v)}`:''}`;
+  $('finTitle').textContent=`Build cost and funding in ${L.city}`;
+  $('finLede').textContent=P.capexMode==='build'?`Building your own ${R.p.courts} courts on empty land: ${f$(F.capex)} upfront, of which ${f$(F.capexCourts)} is courts, roof and groundworks. Owning cuts the yearly running cost by ${pct(P.buildRentCut)}.`:P.capexMode==='convert'?`Converting ${(SITETYPES[P.siteType]||SITETYPES.pitch).short} into ${R.p.courts} courts: ${f$(F.capex)} upfront, of which ${f$(F.capexCivil)} is site works${P.convHasRoof?' (existing roof reused)':''}${P.ownerCapex>0?`, after the host pays ${pct(P.ownerCapex)}`:''}.${P.moveEvery>0?` Courts move every ${P.moveEvery} months, at ${f$(F.moveCapexTotal)} in moves over the run.`:''} ${P.convRevshare?`The pitch owner takes ${pct(P.ownerShare)} of court revenue instead of rent.`:`Lease cuts running cost ${pct(P.convRentCut)} versus a finished padel facility.`}`:P.capexMode==='acquire'?`Buying a struggling ${R.p.courts}-court club: ${f$(F.capex)} upfront, of which ${f$(F.capexCourts)} is the purchase and refurbishment. ${fn(P.acqPlayers)} players come with it.`:`Renting a facility that already has courts: ${f$(F.capex)} upfront (fit-out, kit, deposits, launch). Compare the other ways to get courts in the tables below, or switch one on in the levers.`;
+  const irr=v=>v==null?'—':v>3?'over 300%':pct(v);
+  const k=[[cur(F.capex),'Upfront spend'],[cur(F.equity0),'Owner money needed, incl. working cash'],[f$(F.debt0),`Borrowed at ${(P.rate*100).toFixed(1)}% over ${P.termYears} years (${f$(F.pmt)} a month)`],[F.payback?'Month '+F.payback:'Not in 36 months','Owner money back'],[irr(F.eqIRRnoExit),'Owner return a year over 3 years, no sale'],[irr(F.eqIRR),`Owner return a year, selling at ${P.exitMult}× EBITDA in month 36`],[F.dscrY.map(d=>d==null?'—':d.toFixed(1)+'×').join(' / '),'Debt cover (EBITDA ÷ loan payments), years 1 / 2 / 3']];
+  $('finKpis').innerHTML=k.map(([v,l])=>`<div><b>${v}</b>${l}</div>`).join('');
+  const parts=[{l:P.capexMode==='convert'?'Site works (strip, slab, lights)':'Site works',v:F.capexCivil||0},{l:P.capexMode==='build'?'Courts, roof, groundworks':'Courts + roof',v:F.capexCourts-(F.capexCivil||0)},{l:'Clubhouse fit-out',v:F.fitout},{l:'Automation & kit',v:F.capexAuto},{l:'Pre-opening',v:F.preopen},{l:'Rent deposit (3 months)',v:F.deposit},{l:'Working cash',v:R.p.startCash}].filter(r=>r.v>0);
+  bars($('capexBars'),parts.map(r=>({...r,c:'#1f56b8'})),Math.max(...parts.map(r=>r.v)),f$);
+  drawEq();
+  const y1=F.dscrY.at(0);
+  $('finNote').textContent=`${y1!=null&&y1<1.25?'Debt cover under 1.25× in year 1: a lender will want the founding presale, a grace period or more owner money. ':''}Cost defaults: China-made panoramic court kits list at roughly $8–16K a set before shipping and install; a roof structure often costs more than the court. Owner returns are this model's numbers, so read them as a ranking between options, not a promise.`;}
+function modeCmp(){const B=Object.assign({},P),stp=(SITETYPES[P.siteType]||SITETYPES.pitch),cv=Object.assign({},stp.p,{capexMode:'convert'}),rows=[['Rent a finished padel facility',{capexMode:'rent'}],['Build on empty land',{capexMode:'build'}],[`Convert: ${stp.label.toLowerCase()}, lease`,Object.assign({},cv,{convRevshare:0})],[`Convert: ${stp.label.toLowerCase()}, ${pct(P.ownerShare)} revenue share`,Object.assign({},cv,{convRevshare:1})],['Buy a struggling club',{capexMode:'acquire'}],['Owner pays, we operate (our fee)',{capexMode:'build',managed:1}]];
+  $('modeCmp').innerHTML='<thead><tr><th>How</th><th>Upfront</th><th>Owner money</th><th>Y1 EBITDA</th><th>Y3 EBITDA</th><th>Break-even</th><th>Money back</th></tr></thead><tbody>'+rows.map(([l,m])=>{let r=sim(Object.assign({},B,m)),F=r.fin,on=!m.managed&&m.capexMode===P.capexMode&&(m.capexMode!=='convert'||!!m.convRevshare===!!P.convRevshare);
+  if(m.managed){const fl=managedFlows(r,B);let c=0,pb=null;fl.forEach((f,i)=>{c+=f.cf;if(i>0&&c>=0&&pb===null)pb=i});const ys=y=>fl.slice((y-1)*12+1,y*12+1).reduce((a,f)=>a+f.ebitda,0);
+   return `<tr><td>${l}</td><td>${f$(B.preopen*0.5)}</td><td>${f$(B.preopen*0.5)}</td><td>${f$(ys(1))}</td><td>${f$(ys(3))}</td><td>M1</td><td>${pb?'M'+pb:'—'}</td></tr>`}
+  return `<tr class="${on?'cur':''}"><td>${on?'<b>':''}${l}${on?'</b>':''}</td><td>${f$(F.capex)}</td><td>${f$(F.equity0)}</td><td class="${r.years[0].ebitda<0?'neg':''}">${f$(r.years[0].ebitda)}</td><td>${f$(r.years[2].ebitda)}</td><td>${r.breakEven?'M'+r.breakEven:'—'}</td><td>${F.payback?'M'+F.payback:'—'}</td></tr>`}).join('')+'</tbody>';}
+function siteCmp(){const B=Object.assign({},P);
+  $('siteCmp').innerHTML='<thead><tr><th>Site</th><th>Fits</th><th>Upfront</th><th>Y1 EBITDA</th><th>Y3 EBITDA</th><th>Money back</th><th>Moves</th><th>Watch</th></tr></thead><tbody>'+Object.entries(SITETYPES).map(([k,st])=>{const pr=ROOFS[st.p.roof].premium/ROOFS[P.roof].premium;const r=sim(Object.assign({},B,st.p,{capexMode:'convert',pricePeak:Math.round(B.pricePeak*pr),priceOff:Math.round(B.priceOff*pr)})),F=r.fin,on=P.capexMode==='convert'&&P.siteType===k;
+  return `<tr class="pick ${on?'cur':''}" data-st="${k}" tabindex="0"><td>${st.label}</td><td>${st.fit}</td><td>${f$(F.capex)}</td><td class="${r.years[0].ebitda<0?'neg':''}">${f$(r.years[0].ebitda)}</td><td>${f$(r.years[2].ebitda)}</td><td>${F.payback?'M'+F.payback:'—'}</td><td>${F.moveCapexTotal?f$(F.moveCapexTotal):'—'}</td><td class="small">${st.note}</td></tr>`}).join('')+'</tbody>';}
+$('siteCmp').addEventListener('click',e=>{const tr=e.target.closest('tr[data-st]');if(tr)applySite(tr.dataset.st)});
+$('siteCmp').addEventListener('keydown',e=>{if(e.key==='Enter'){const tr=e.target.closest('tr[data-st]');if(tr)applySite(tr.dataset.st)}});
+
+function guild(){const L=LK(),g=simGuild(Object.assign({},P,{months:36})),o=g.out[36],sum=(y,f)=>g.out.slice((y-1)*12+1,y*12+1).reduce((a,x)=>a+f(x),0);
+  $('gTitle').textContent=`Guild and partner courts in ${L.city}`;
+  $('gLede').textContent=`A players' guild with no courts of its own: members pay ${f$(P.guildFee)} a month for leagues, socials and better rates, book partner clubs through our links (we take ${pct(P.affRate)}), and our academy rents partner courts in their empty hours at ${pct(P.blockDisc)} off. It can start before any lease is signed, then hands its members to our own clubs.`;
+  $('gKpis').innerHTML=[[fn(o.members),'Guild members, month 36'],[fn(o.kids),'Kids in the academy on partner courts'],[f$(sum(1,x=>x.revenue))+' / '+f$(sum(3,x=>x.revenue)),'Revenue, year 1 / year 3'],[f$(sum(1,x=>x.ebitda))+' / '+f$(sum(3,x=>x.ebitda)),'EBITDA, year 1 / year 3'],[f$(g.capex),'Upfront (loaner kit, launch)'],[g.payback?'Month '+g.payback:'—','Money back']].map(([v,l])=>`<div><b>${v}</b>${l}</div>`).join('');
+  const r3={};for(let m=25;m<=36;m++)for(const k in g.out[m].rev)r3[k]=(r3[k]||0)+g.out[m].rev[k];
+  const lab={fees:'Guild memberships',events:'Leagues and socials',affiliate:'Partner commissions and bounties',kids:'Academy on partner courts'};
+  const rows=Object.entries(r3).map(([k,v])=>({l:lab[k],v,c:'#1f56b8'}));bars($('gRev'),rows,Math.max(...rows.map(r=>r.v)),f$);
+  $('gGive').innerHTML=[[fn(o.courtHrs),'Court-hours a month we bring them'],[f$(o.cost.courts),'Paid to partners for blocks, a month'],[pct(o.courtHrs/(3*17*30)),'Of a 3-court club\'s open hours']].map(([v,l])=>`<div><b>${v}</b>${l}</div>`).join('');
+  $('gNote').textContent=`The pitch to partner clubs: we fill about ${fn(o.courtHrs)} court-hours a month, mostly their empty daytime and weekday hours, in exchange for block rates and a booking commission. Platform booking fees run around 4% of a booking, so ${pct(P.affRate)} for players we bring them is the ask to test. Membership numbers here are this model's guesses; a presale through your existing users sets the real starting point.`;}
+const DEFNET=[{kind:'guild',city:'bangkok',start:1},{kind:'rent',city:'bangkok',start:3,courts:3},{kind:'guild',city:'shenzhen',start:6},{kind:'rent',city:'shenzhen',start:11,courts:3},{kind:'convert',site:'futsal',city:'bangkok',start:15,courts:3},{kind:'convert',site:'futsal',city:'kualalumpur',start:18,courts:3},{kind:'satellite',site:'tennis',city:'bangkok',start:18,courts:2},{kind:'convert',site:'movable',city:'shenzhen',start:20,courts:3},{kind:'managed',city:'bangkok',start:24,courts:3},{kind:'convert',site:'school',city:'bangkok',start:27,courts:2},{kind:'acquire',city:'kualalumpur',start:30,courts:4}];
+let NET=null;try{NET=JSON.parse(localStorage.getItem('padelNet')||'null')}catch(e){}NET=NET||JSON.parse(JSON.stringify(DEFNET));
+const saveNet=()=>{try{localStorage.setItem('padelNet',JSON.stringify(NET))}catch(e){}};
+const mlab=m=>`M${m} · ${MON[(m-1)%12]} ${2027+Math.floor((m-1)/12)}`;
+function netEditor(){const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}" ${k===v?'selected':''}>${l}</option>`).join('');
+  const cities=Object.fromEntries(Object.entries(LOCS).sort((a,b)=>a[1].tier-b[1].tier).map(([k,c])=>[k,c.city])),sites=Object.fromEntries(Object.entries(SITETYPES).map(([k,v])=>[k,v.label]));
+  $('netT').innerHTML='<thead><tr><th>What</th><th>City</th><th>Opens (month)</th><th>Courts</th><th>Our upfront</th><th>EBITDA, last 12 months</th><th>Money back</th><th>Kind of site</th><th></th></tr></thead><tbody>'+NET.map((s,i)=>`<tr><td><select data-i="${i}" data-k="kind" aria-label="what">${opt(KINDS,s.kind)}</select></td><td><select data-i="${i}" data-k="city" aria-label="city">${opt(cities,s.city)}</select></td><td><input type="number" min="1" max="60" data-i="${i}" data-k="start" value="${s.start}" aria-label="opening month"></td><td>${s.kind==='guild'?'<span class="small">partners</span>':`<input type="number" min="1" max="8" data-i="${i}" data-k="courts" value="${s.courts||3}" aria-label="courts">`}</td><td id="nu_${i}"></td><td id="ne_${i}"></td><td id="np_${i}"></td><td>${s.kind==='convert'||s.kind==='satellite'?`<select data-i="${i}" data-k="site" aria-label="site">${opt(sites,s.site||'pitch')}</select>`:'<span class="small">—</span>'}</td><td><button type="button" data-del="${i}" aria-label="remove">✕</button></td></tr>`).join('')+'</tbody>';}
+$('netT').addEventListener('change',e=>{const el=e.target,i=+el.dataset.i,k=el.dataset.k;if(isNaN(i)||!k)return;NET[i][k]=el.type==='number'?+el.value:el.value;if(k==='kind'){if((el.value==='convert'||el.value==='satellite')&&!NET[i].site)NET[i].site=el.value==='satellite'?'tennis':'futsal';if(el.value!=='guild'&&!NET[i].courts)NET[i].courts=el.value==='satellite'?2:3;netEditor();}saveNet();network();});
+$('netT').addEventListener('click',e=>{const b=e.target.closest('button[data-del]');if(!b)return;NET.splice(+b.dataset.del,1);saveNet();netEditor();network();});
+$('netAdd').onclick=()=>{NET.push({kind:'convert',site:'futsal',city:P.loc,start:24,courts:3});saveNet();netEditor();network();};
+$('netReset').onclick=()=>{NET=JSON.parse(JSON.stringify(DEFNET));saveNet();netEditor();network();};
+let NR=null;
+function network(){if(!$('nu_0')&&NET.length)netEditor();const base=Object.assign({},P);NR=runNetwork(NET,base,60);
+  NR.rows.forEach(r=>{const i=r.i;if(!$('nu_'+i))return;$('nu_'+i).textContent=f$(r.upfront);$('ne_'+i).textContent=f$(r.last12);$('ne_'+i).className=r.last12<0?'neg':'';$('np_'+i).textContent=r.payback?'M'+(r.start-1+r.payback):'—';});
+  const y5=NR.years.at(-1),pl=NR.rows.reduce((a,r)=>a+(r.kind==='guild'?0:r.players),0),kids=NR.rows.reduce((a,r)=>a+r.kids,0);
+  $('nKpis').innerHTML=[[fn(NR.courts),`Courts in ${NR.rows.filter(r=>r.kind!=='guild').length} sites`],[f$(y5),'EBITDA in year 5 (2031)'],[f$(NR.peakNeed),'Peak funding needed, after presales'],[NR.payback?mlab(NR.payback):'Not in 5 years','All money back'],[fn(pl),'Players across own sites, month 60'],[fn(kids),'Kids in academies, month 60']].map(([v,l])=>`<div><b>${v}</b>${l}</div>`).join('');
+  bars($('netYears'),NR.years.map((v,i)=>({l:'Year '+(i+1)+' ('+(2027+i)+')',v,c:'#1f56b8'})),Math.max(...NR.years.map(Math.abs),1),f$);
+  drawNet();
+  const mv=NR.rows.reduce((a,r)=>a+(r.moveCapex||0),0);
+  $('netNote').textContent=`Our upfront excludes working cash; owner-funded sites show only our launch cost and our fee income. ${mv?`Moving courts costs ${f$(mv)} over the plan. `:''}Every site is this model run with today's levers, which still sit above published revenue per court, so use the planner to order and size the rollout, not to forecast its total.`;}
+const drawNet=fig($('netChart'),(W,H)=>{if(!NR||!W)return;const v=NR.cum,n=v.length-1,l=60,r=12,t=14,b=24,mx=Math.max(...v,1),mn=Math.min(...v,0);const X=i=>l+(W-l-r)*i/n,Y=x=>t+(H-t-b)*(1-(x-mn)/(mx-mn));
+  let s='';for(let k=0;k<=3;k++){const x=mn+(mx-mn)*k/3;s+=`<line x1="${l}" x2="${W-r}" y1="${Y(x)}" y2="${Y(x)}" stroke="var(--line)"/><text x="${l-6}" y="${Y(x)+4}" font-size="12" text-anchor="end" fill="var(--mut)">${f$(x)}</text>`}
+  s+=`<line x1="${l}" x2="${W-r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--ink)"/>`;for(let m=0;m<=n;m+=12)s+=`<text x="${X(m)}" y="${H-6}" font-size="12" text-anchor="${m===n?'end':m?'middle':'start'}" fill="var(--mut)">${2027+m/12}</text>`;
+  NET.forEach(st=>{const x=X(Math.max(0,(+st.start)-1));s+=`<line x1="${x}" x2="${x}" y1="${t}" y2="${H-b}" stroke="var(--line)" stroke-dasharray="2 3"/>`});
+  s+=`<path d="${v.map((x,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(x).toFixed(1)).join('')}" fill="none" stroke="var(--court)" stroke-width="2.5"/>`;
+  const lo=v.indexOf(Math.min(...v));s+=`<circle cx="${X(lo)}" cy="${Y(v[lo])}" r="5" fill="#f2694d"/><text x="${Math.min(X(lo)+8,W-170)}" y="${Y(v[lo])-10}" font-size="12" fill="var(--ink)">peak need ${f$(-v[lo])}</text>`;
+  $('netChart').innerHTML=s;});
+const drawEq=fig($('eqChart'),(W,H)=>{if(!R||!W)return;let c=0;const v=R.out.map(o=>c+=o.eqCF),n=v.length-1,l=56,r=12,t=14,b=24,mx=Math.max(...v,1),mn=Math.min(...v,0);const X=i=>l+(W-l-r)*i/n,Y=x=>t+(H-t-b)*(1-(x-mn)/(mx-mn));
+  let s='';for(let k=0;k<=3;k++){const x=mn+(mx-mn)*k/3;s+=`<line x1="${l}" x2="${W-r}" y1="${Y(x)}" y2="${Y(x)}" stroke="var(--line)"/><text x="${l-6}" y="${Y(x)+4}" font-size="12" text-anchor="end" fill="var(--mut)">${f$(x)}</text>`}
+  s+=`<line x1="${l}" x2="${W-r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--ink)"/>`;for(let m=0;m<=n;m+=12)s+=`<text x="${X(m)}" y="${H-6}" font-size="12" text-anchor="${m===n?'end':m?'middle':'start'}" fill="var(--mut)">${m?'Y'+m/12:'Open'}</text>`;
+  s+=`<path d="${v.map((x,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(x).toFixed(1)).join('')}" fill="none" stroke="var(--court)" stroke-width="2.5"/>`;
+  const pb=R.fin.payback;if(pb)s+=`<circle cx="${X(pb)}" cy="${Y(0)}" r="5" fill="#f2694d"/><text x="${X(pb)+8}" y="${Y(0)-8}" font-size="12" fill="var(--ink)" dy="-8">paid back, month ${pb}</text>`;
+  $('eqChart').innerHTML=s;});
+let SITE=null;try{SITE=JSON.parse(localStorage.getItem('padelSites')||'null')}catch(e){}
+SITE=SITE||JSON.parse(JSON.stringify(SITES));
+const siteParams=st=>{const L=LOCS[P.loc],pr=ROOFS[st.roof].premium/ROOFS[P.roof].premium;return {baseOpex:+st.cost,costIdx:1,courts:+st.courts,roof:st.roof,market:Math.round(st.res*L.playRate+st.off*L.playRate*2),latent:Math.round(st.res*0.02+st.off*0.04),comp:+st.comp,proxOverride:0.6,schools:Math.min(10,+st.schools),office:Math.min(0.95,st.off/(st.res*0.5+st.off)),pricePeak:Math.round(P.pricePeak*pr),priceOff:Math.round(P.priceOff*pr)}};
+function servable(r){const o=r.out[24],pc=o.peakCap,oc=o.offCapAll;return {adults:Math.round((pc*0.7+oc*0.25)*4/2.6),kids:Math.round(r.maxKids),visitsWk:Math.round((pc*0.7+oc*0.25)*4/WK)}}
+function sites(){const L=LK(),list=SITE[P.loc];
+  if(!list){$('siteTitle').textContent='Site picker';$('siteLede').textContent='Site samples exist for the three focus cities only. Pick Bangkok, Shenzhen or Kuala Lumpur.';$('siteIn').innerHTML='';$('siteOut').innerHTML='';return}
+  const sv=servable(R);
+  $('siteTitle').textContent=`Site picker: how many players can ${R.p.courts} courts serve in ${L.city}?`;
+  $('siteLede').textContent=`At a well-run club's fill (70% of peak hours, 25% of the rest) ${R.p.courts} courts host about ${fn(sv.visitsWk)} player visits a week: enough for ~${fn(sv.adults)} regular adults at 2–3 games a month, plus ${fn(sv.kids)} academy kids. A site needs clearly more reachable players and newcomers than that.`;
+  const num=(i,k)=>`<input type="number" data-i="${i}" data-k="${k}" value="${list.at(i)[k]}" aria-label="${k}">`;
+  $('siteIn').innerHTML=`<thead><tr><th>Site</th><th>Running cost a year, incl. rent ($)</th><th>Courts</th><th>Roof</th><th>Residents within 5 km</th><th>Office workers within 5 km</th><th>Schools</th><th>Competing courts within 5 km</th></tr></thead><tbody>`+
+    list.map((st,i)=>`<tr><td><input data-i="${i}" data-k="name" value="${st.name.replace(/"/g,'&quot;')}" aria-label="name"></td><td>${num(i,'cost')}</td><td>${num(i,'courts')}</td><td><select data-i="${i}" data-k="roof" aria-label="roof">${Object.keys(ROOFS).map(k=>`<option value="${k}" ${k===st.roof?'selected':''}>${{outdoor:'Open-air',covered:'Roof',indoor:'Indoor AC'}[k]}</option>`).join('')}</select></td><td>${num(i,'res')}</td><td>${num(i,'off')}</td><td>${num(i,'schools')}</td><td>${num(i,'comp')}</td></tr>`).join('')+'</tbody>';
+  const res=list.map(st=>{const sp=siteParams(st),r=sim(Object.assign({},P,sp));return {st,sp,r,sv:servable(r)}});
+  const best=res.reduce((a,b)=>b.r.years[2].ebitda>a.r.years[2].ebitda?b:a);
+  $('siteOut').innerHTML=`<thead><tr><th>Site</th><th>Players it can serve (adults + kids)</th><th>Existing players you reach, M24</th><th>Newcomer pool</th><th>Year 1 revenue</th><th>Year 3 EBITDA</th><th>Break-even</th><th>Owner money back</th><th>Peak full, M24</th><th></th></tr></thead><tbody>`+
+    res.map((x,i)=>{const o=x.r.out[24];return `<tr class="${x===best?'cur':''}"><td>${x.st.name}${x===best?' <span class="tag">best</span>':''}</td><td>${fn(x.sv.adults)} + ${fn(x.sv.kids)}</td><td>${fn(x.sp.market*o.share)}</td><td>${fn(x.sp.latent)}</td><td>${f$(x.r.years[0].revenue)}</td><td class="${x.r.years[2].ebitda<0?'neg':''}">${f$(x.r.years[2].ebitda)}</td><td>${x.r.breakEven?'M'+x.r.breakEven:'—'}</td><td>${x.r.fin.payback?'M'+x.r.fin.payback:'—'}</td><td>${pct(o.peakFill)}</td><td><button type="button" data-use="${i}">Use this site</button></td></tr>`}).join('')+'</tbody>';}
+$('siteIn').addEventListener('change',e=>{const el=e.target,i=+el.dataset.i,k=el.dataset.k;if(k==null||!SITE[P.loc])return;const st=SITE[P.loc].at(i);st[k]=k==='name'||k==='roof'?el.value:+el.value;try{localStorage.setItem('padelSites',JSON.stringify(SITE))}catch(_){}sites()});
+$('siteOut').addEventListener('click',e=>{const b=e.target.closest('button[data-use]');if(!b)return;Object.assign(P,siteParams(SITE[P.loc].at(+b.dataset.use)));cur=null;renderLoc();renderLevers();run();window.scrollTo({top:0,behavior:'smooth'})});
+const CAL_SAMPLE='wd,7,0.35\nwd,8,0.30\nwd,9,0.15\nwd,10,0.12\nwd,11,0.10\nwd,12,0.20\nwd,13,0.12\nwd,14,0.10\nwd,15,0.15\nwd,16,0.25\nwd,17,0.55\nwd,18,0.85\nwd,19,0.95\nwd,20,0.95\nwd,21,0.85\nwd,22,0.55\nwe,7,0.45\nwe,8,0.75\nwe,9,0.90\nwe,10,0.95\nwe,11,0.90\nwe,12,0.70\nwe,13,0.55\nwe,14,0.50\nwe,15,0.55\nwe,16,0.70\nwe,17,0.80\nwe,18,0.80\nwe,19,0.70\nwe,20,0.55\nwe,21,0.40\nwe,22,0.25';
+$('calSample').onclick=()=>{$('calIn').value=CAL_SAMPLE;$('calMsg').textContent='Sample filled (illustrative numbers). Replace with real data, then fit.'};
+$('calClear').onclick=()=>{P.calib=null;P.demandScale=0.75;$('calMsg').textContent='Calibration cleared.';renderLevers();run()};
+$('calApply').onclick=()=>{const rows=$('calIn').value.trim().split(/\n+/).map(l=>l.split(/[,\t;]/).map(x=>x.trim())).filter(r=>r.length>=3&&/^(wd|we)$/i.test(r[0]));
+  if(!rows.length){$('calMsg').textContent='No rows read. Use daytype,hour,occupancy.';return}
+  const base=sim(Object.assign({},P,{calib:null})),o=base.out[12],cal={wd:{},we:{}};let obsT=0,modT=0,n=0;
+  for(const [dt0,h0,v0] of rows){const dt=dt0.toLowerCase(),h=+h0;let v=parseFloat(v0);if(isNaN(v))continue;if(v0.includes('%')||v>1)v=v/100;const sl=o.slots.find(x=>x.dt===dt&&x.h===h);if(!sl||!sl.open||!sl.cap)continue;
+    const used=(sl.rent+sl.kids+sl.starter+sl.social+sl.corp+sl.coach)/sl.cap;cal[dt][h]=Math.max(0.2,Math.min(5,(v+0.03)/(used+0.03)));obsT+=v*sl.cap;modT+=used*sl.cap;n++}
+  const sc=modT>0?Math.max(0.3,Math.min(2,obsT/modT)):1;P.calib=cal;P.demandScale=Math.round(P.demandScale*sc*100)/100;
+  $('calMsg').textContent=`Fitted ${n} hours. Overall level ×${sc.toFixed(2)} (demand scale now ${P.demandScale}); hourly shape adjusted.`;renderLevers();run()};
+function bars(el,rows,max,fmt){el.innerHTML=rows.map(r=>`<div class="r"><span>${r.l}${r.tag?`<span class="tag">${r.tag}</span>`:''}</span><span class="t"><i style="left:${r.v<0?50-Math.min(50,Math.abs(r.v)/max*50):r.center?50:0}%;width:${Math.min(r.center?50:100,Math.abs(r.v)/max*(r.center?50:100))}%;background:${r.v<0?'var(--neg)':r.c||'var(--court)'}"></i></span><span class="v ${r.v<0?'neg':''}">${fmt(r.v)}${r.extra||''}</span></div>`).join('')}
+
+const MODS=[['starterOn','First Rally tasters'],['miniOn','Mini-padel for under-8s'],['familyOn','Family plans'],['memOn','Memberships'],['annualShare','Annual upfront memberships',0],['foundOn','Founding presale'],['walletOn','Prepaid wallets'],['kidsOn','Junior academy'],['schools','School partnerships',0],['campsOn','Holiday camps'],['kidsPrepay','Term prepay for academy'],['coachOn','Adult coaching'],['socialsOn','Americanas & socials'],['tourOn','Monthly tournament'],['corpOn','Corporate packages'],['sponsorOn','Court sponsors'],['contentOn','Content & social'],['proEvent','Pro exhibition'],['smartAccess','Smart access'],['dynPricing','Dynamic pricing'],['replay','AI replay cameras'],['ballMachine','Ball machine'],['vending','Smart vending']];
+function impact(){const rows=MODS.map(([k,l,offV])=>{const on=!!P[k];const alt=Object.assign({},P,{[k]:on?(offV??0):(DEF[k]||1)});const r2=sim(alt);
+   const dE=on?R.cumEbitda-r2.cumEbitda:r2.cumEbitda-R.cumEbitda;const dF=on?R.peakFloat-r2.peakFloat:r2.peakFloat-R.peakFloat;
+   return {l,v:dE,tag:on?'':'if added',extra:Math.abs(dF)>500?` <span class="tag">${dF>0?'+':'−'}${f$(Math.abs(dF))} prepaid</span>`:'',c:on?'var(--court)':'var(--auto)',center:1}}).sort((a,b)=>b.v-a.v);
+  const mx=Math.max(...rows.map(r=>Math.abs(r.v)),1);bars($('impact'),rows,mx,v=>(v>=0?'+':'')+f$(v));
+  $('impact').querySelectorAll('.r').forEach(r=>r.style.gridTemplateColumns='');return rows;}
+
+function drawFunnel(){const m=+$('month').value,o=R.out[m];
+  const rows=[{l:'Audience',v:o.A,c:'#7da6ea'},{l:'Active players',v:o.players,c:'var(--court)'},{l:'Members',v:o.members,c:'#0e3486'},{l:'Kids in academy',v:o.K,c:'#b9c92a'},{l:'Corporate clients',v:o.Corp,c:'#8b6bd9'}];
+  const mx=Math.max(...rows.map(r=>r.v),1);$('funnel').innerHTML='';
+  bars($('funnel'),rows.map(r=>({...r,v:r.v})),mx,v=>fn(v));
+  $('funnel').querySelectorAll('.t i').forEach((i,k)=>{i.style.width=Math.max(.6,Math.sqrt(rows[k].v/mx)*100)+'%'});}
+
+function advice(rows,best){const L=LK();const out=[],o24=R.out[Math.min(24,R.out.length-1)],o36=R.out[R.out.length-1],y=R.years;
+  const sold=R.out.find(o=>o.m&&o.peakFill>=.95);
+  const lost=R.out.slice(-6).reduce((a,o)=>a+o.unmet,0)/6;
+  if(sold)out.push(['w',`Peak is sold out from month ${sold.m}${lost>5?`, turning away about ${fn(lost)} court-hours a month`:', with no room left to grow'}. Try peak at ${f$(Math.round(R.p.pricePeak*1.15))} an hour, or plan a ${R.p.courts+1}th court.`]);
+  if(o24.offFill<.4)out.push(['w',`Off-peak runs ${pct(o24.offFill)} full in month 24. Wallet bonuses, kids sessions, socials and a wider peak/off-peak price gap are the levers that fill it.`]);
+  else out.push(['g',`Off-peak is ${pct(o24.offFill)} full by month 24, well above the 10–35% most clubs see.`]);
+  if(o36.waitlist>3)out.push(['w',`The academy is full at ${fn(R.maxKids)} kids, with ${fn(o36.waitlist)} more wanting a place each month. Bigger groups, a third weekly slot block or another court lift that cap.`]);
+  if(R.minCash<0){const mo=R.out.find(o=>o.cash<0).m;out.push(['w',`Cash goes negative in month ${mo} and bottoms at ${f$(R.minCash)}. A founding presale or annual upfront plans would cover it before you raise equity.`])}
+  else out.push(['g',`Cash never drops below ${f$(R.minCash)}. Customers prepay up to ${f$(R.peakFloat)}, which is ${(R.peakFloat/(R.out[12].opex||1)).toFixed(1)} months of month-12 running costs.`]);
+  const top=rows.filter(r=>!r.tag).slice(0,3).map(r=>r.l.toLowerCase());if(top.length)out.push(['',`Your biggest earners right now are ${top.join(', ')}.`]);
+  const add=rows.filter(r=>r.tag&&r.v>0)[0];if(add)out.push(['',`Not switched on yet, ${add.l.toLowerCase()} would add about ${f$(add.v)} of EBITDA over three years.`]);
+  const neg=rows.filter(r=>!r.tag&&r.v<0);if(neg.length)out.push(['w',`${neg.map(r=>r.l).join(', ')} ${neg.length>1?'lose':'loses'} money at these settings. Reprice or switch off.`]);
+  if(best&&best.rf!==P.roof){const cur=R.years[2].ebitda,b=best.r.years[2].ebitda;if(b-cur>5000)out.unshift(['w',`In ${L.city}, switching to ${ROOFS[best.rf].label.toLowerCase()} would add about ${f$(b-cur)} of year-3 EBITDA: ${best.rf==='indoor'?`${[Math.max(...L.hi)>=32?'heat':'',Math.min(...L.hi)<12?'cold winters':'',L.rain.some(r=>r>=14)?'rain':''].filter(Boolean).join(' and ')||'the weather'} ${'cost'} more play than the AC and higher running cost`:best.rf==='covered'?'rain and midday sun lose more play than the roof costs':'the climate is mild enough that a roof does not pay back'}.`])}
+  { const o=R.out[24],o0=R.out[1],sh=o.share;
+    if(P.comp<=10&&P.latent>5000) out.unshift(['g',`Only ${fn(P.comp)} competing courts in ${L.city} today: few people have played yet, so ${R.p.starterOn?`taster sessions turn about ${fn(o.starterNew)} newcomers a month into regulars by month 24 — that, not existing players, is what fills the courts`:'turn on First Rally tasters: there are not enough existing players to fill 3 courts'}. Expect competitors to follow: the model grows them to ${fn(R.out[36].compCourts)} courts by month 36.`]);
+    else if(sh<0.2) out.unshift(['w',`${L.city} is crowded: your ${R.p.courts} courts face about ${fn(o.compCourts)} competing courts by month 24, so you reach only ~${pct(sh)} of existing players. Win a niche the others ignore — families, kids and true beginners — and price taster sessions to bring new people in rather than fighting for current players.`]); }
+  if(P.office>=0.7){const day=o24.slots.filter(x=>x.dt==='wd'&&x.open&&x.h>=9&&x.h<=16),fill=day.reduce((a,x)=>a+x.rent+x.kids+x.starter+x.social+x.corp+x.coach,0)/day.reduce((a,x)=>a+x.cap,0);
+    const eve=o24.slots.filter(x=>x.dt==='wd'&&x.open&&x.h>=18&&x.h<=21),ef=eve.reduce((a,x)=>a+x.dem+x.kids+x.starter+x.social+x.corp+x.coach,0)/eve.reduce((a,x)=>a+x.cap,0);
+    out.push([fill<0.5?'w':'',`Office-heavy catchment: in month 24, weekday 09:00–17:00 courts are ${pct(fill)} used (mostly programmes) while 18:00–22:00 demand is ${pct(ef)} of capacity. Sell those hours to companies (lunch leagues, team days), parents, schools and shift workers, and keep peak pricing strict after 18:00.`])}
+  if(P.tourist>=0.3){const ts=L.tSeason,hi=MON[ts.indexOf(Math.max(...ts))],lo=MON[ts.indexOf(Math.min(...ts))];out.push(['',`Visitors are ${pct(o24.touristShare)} of court-hours. They peak in ${hi} and drop to ${Math.round(Math.min(...ts)*100)}% of normal in ${lo}: sell hotel and villa partnerships and drop-in packs in high season, and run resident leagues and kids terms through the low one.`])}
+  const hotM=L.hi.filter(t=>t>=32).length;if(hotM>=4&&P.roof!=='indoor')out.push(['',`${hotM} months a year run above 32°C highs. Midday weekday hours lose up to ${Math.round((1-weatherFactor(13,Math.max(...L.hi),0,ROOFS[P.roof]))*100)}% of demand under your roof, so price 11:00–16:00 lowest and put the kids academy after 16:00.`]);
+  $('advice').innerHTML=out.map(([c,t])=>`<li class="${c}">${t}</li>`).join('');}
+
+function pnl(){const ys=R.years;const row=(l,f,cls='')=>`<tr class="${cls}"><td>${l}</td>${ys.map(y=>{const v=f(y);return`<td class="${v<0?'neg':''}">${f$(v)}</td>`}).join('')}</tr>`;
+  const CL=[['base','Base running cost'],['staff','Added staff (step-ups)'],['variable','Court-hour & payment costs'],['coaches','Coaches & event costs'],['growth','Marketing, content, sales, schools'],['automation','Automation fees & vending stock']];
+  $('pnl').innerHTML=`<thead><tr><th>Line</th>${ys.map((_,i)=>`<th>Year ${i+1}</th>`).join('')}</tr></thead><tbody>`+STREAMS.map(([k,l])=>row(l,y=>y.rev[k])).join('')+row('Revenue',y=>y.revenue,'tot')
+   +CL.map(([k,l])=>row(l,y=>-y.cost[k])).join('')+row('EBITDA',y=>y.ebitda,'tot')+`<tr><td>EBITDA margin</td>${ys.map(y=>`<td>${pct(y.ebitda/y.revenue)}</td>`).join('')}</tr>`
+   +`<tr><td>Revenue per court-hour available</td>${ys.map(y=>`<td>${f$(y.revenue/(R.p.courts*((R.p.smartAccess?126:112))*52))}</td>`).join('')}</tr></tbody>`;}
+
+function milestones(){const o=R.out,first=f=>{const x=o.find(z=>z.m&&f(z));return x?x.m:null};
+  const items=[['Break-even (3 months running)',R.breakEven],['1,000 active players',first(z=>z.players>=1000)],['100 kids in the academy',first(z=>z.K>=100)],['10,000 audience',first(z=>z.A>=10000)],['$50k prepaid by customers',first(z=>z.float>=50000)],['Peak 90% full',first(z=>z.peakFill>=.9)],['Starting cash earned back',first(z=>z.cash>=R.p.startCash+R.capex&&z.m>3)],['First court sponsor',first(z=>z.sponsorDeals>0)]];
+  $('ms').innerHTML=items.map(([l,m])=>`<div class="${m?'':'no'}"><b>${m?'Month '+m:'Not in 36 months'}</b>${l}</div>`).join('');}
+
+function archetype(){const p=R.p,y1=R.years[0],o12=R.out[12];
+  const streams=STREAMS.filter(([k])=>y1.rev[k]>0).map(([k,l])=>({id:k,label:l,annual_revenue_y1:Math.round(y1.rev[k])}));
+  const base={court_peak:{price_default:p.pricePeak,price_min:20,price_max:90,price_elasticity:-.6},court_offpeak:{price_default:p.priceOff,price_min:10,price_max:70,price_elasticity:-.9}};
+  const j={meta:{schema_version:'1.1.0',source:'preset',business_name:`Padel Club ${LK().city} — `+(cur||'Custom'),business_description:`${p.courts}-court rental padel club in ${LK().city}, ${LK().country} (${ROOFS[p.roof].label.toLowerCase()}). Base running cost $${fn(p.baseOpex)}/yr. Hourly courts with peak/off-peak pricing, memberships, junior academy, programming, corporate and automated services.`},
+   type_class:'B',entry_state:{liquid:p.startCash,xp_score:0,brand_local:.15,brand_global:0,life_budget:3},
+   objective:{metric:'cumulative_revenue',target_value:Math.round(R.years.reduce((a,y)=>a+y.revenue,0)),time_unit:'month',horizon_t:36},
+   revenue_model:{streams:[{id:'court_peak',label:'Peak court-hours',...base.court_peak,volume_baseline:Math.round(o12.peakServed),conversion_rate:1,net_revenue_retention:1,expansion_revenue_rate:0},
+     {id:'court_offpeak',label:'Off-peak court-hours',...base.court_offpeak,volume_baseline:Math.round(o12.offServed),conversion_rate:1,net_revenue_retention:1,expansion_revenue_rate:0},
+     ...(p.memOn?[{id:'membership',label:'Membership',price_default:p.memFee,price_min:15,price_max:120,price_elasticity:-.5,volume_baseline:Math.round(o12.members),conversion_rate:.02,net_revenue_retention:.97,expansion_revenue_rate:0}]:[]),
+     ...(p.kidsOn?[{id:'kids_academy',label:'Junior academy',price_default:p.kidsFee,price_min:40,price_max:200,price_elasticity:-.8,volume_baseline:Math.round(o12.K),conversion_rate:.05,net_revenue_retention:.965,expansion_revenue_rate:0}]:[])],
+     y1_mix:streams},
+   cost_model:{fixed_burn_per_period:Math.round(p.baseOpex/12),variable_cost_per_unit:p.varHr,cogs_rate:.025,step_function_thresholds:[{volume:600,fixed_cost_increase:p.smartAccess?900:1800,label:'Front-desk shift'},{volume:1200,fixed_cost_increase:p.smartAccess?900:1800,label:'Second front-desk shift'},{volume:2,fixed_cost_increase:2500,label:'Programme manager (2+ programmes)'}]},
+   demand_model:{base_demand:p.startPlayers,weather_sensitivity:{outdoor:.6,covered:.25,indoor:0}[p.roof],competitor_pressure:p.competitor?.15:0,marketing_efficiency:+(1/p.cac).toFixed(3),viral_coefficient:.02,churn_rate_monthly:.07,seasonality:{enabled:true,weekend_multiplier:1.6,monthly_index:LK().cal},market_size:p.market},
+   levers:[{id:'price',label:'Peak price / court-hour',type:'continuous',min:20,max:90,default:p.pricePeak,step:1,unit:'$',affects:['price']},{id:'offpeak_price',label:'Off-peak price',type:'continuous',min:10,max:70,default:p.priceOff,step:1,unit:'$',affects:['price','demand']},{id:'ad_spend',label:'Paid marketing',type:'continuous',min:0,max:3000,default:p.mkt,step:100,unit:'$',affects:['demand']},{id:'membership_fee',label:'Membership / mo',type:'continuous',min:15,max:120,default:p.memFee,step:1,unit:'$',affects:['conversion']},{id:'kids_fee',label:'Academy fee',type:'continuous',min:40,max:200,default:p.kidsFee,step:5,unit:'$',affects:['demand']},{id:'automation',label:'Automation tier',type:'segmented',affects:['cost','capacity'],options:[{id:'staffed',label:'Fully staffed',cost_modifier:0,conversion_modifier:0},{id:'smart',label:'Smart access + dynamic pricing',cost_modifier:-.1,conversion_modifier:.05}]}],
+   events:[{id:'competitor_open',label:'Competitor club opens',trigger:{type:'random',probability:.05,period_min:9},demand_modifier:.85,duration_periods:0},{id:'pro_exhibition',label:'Pro exhibition match',trigger:{type:'scheduled',period:p.proMonth},demand_modifier:1.3,duration_periods:3},{id:'rainy_season',label:'Rainy season',trigger:{type:'calendar',months:LK().rain.map((r,i)=>r>=14?i+1:0).filter(Boolean)},demand_modifier:1-Math.min(.6,14/30*{outdoor:.8,covered:.12,indoor:0}[p.roof]),duration_periods:1},{id:'heat_wave',label:'Heat wave',trigger:{type:'random',probability:LK().hi.some(t=>t>=33)?.1:.02,period_min:1},demand_modifier:{outdoor:.7,covered:.85,indoor:1}[p.roof],duration_periods:1}],
+   achievements:[{id:'sold_out_evenings',label:'Sold-out evenings',condition:{metric:'peak_utilization',op:'>=',value:.9},xp_reward:.05},{id:'customer_funded',label:'Customer-funded',condition:{metric:'prepaid_float',op:'>=',value:50000},xp_reward:.05},{id:'next_gen',label:'Next generation',condition:{metric:'kids_enrolled',op:'>=',value:100},xp_reward:.05}],
+   risk_model:{constraint_budget:3,events:[{id:'solvency',trigger:'liquid <= 0',severity:1,label:'Ran out of cash'},{id:'reputation_loss',trigger:'brand_local < 0.05',severity:.5,label:'Lost community trust'}]},
+   display:{icon:'🎾',currency_symbol:'$',primary_metric_label:'Revenue goal'},
+   location:{id:p.loc,city:LK().city,country:LK().country,roof:p.roof,local_currency:LK().ccy,fx_per_usd:LK().fx,cost_index:p.costIdx,office_intensity:p.office,visitor_share:p.tourist,peak_windows:{weekday:LK().peakWd,weekend:LK().peakWe},climate:{monthly_high_c:LK().hi,monthly_rain_days:LK().rain},visitor_season:LK().tSeason,local_calendar:LK().cal},
+   inspector:{raw_input:null,assumptions_made:['Opening month January','Peak = weekdays 17–23, weekends 10–20','4 players per court-hour','Founding seats recognised over 12 months'],warnings:[],fill_sources:{all:'padel_club_tycoon'},overrides_by_player:[]},
+   sim_snapshot:{break_even_month:R.breakEven,y1_revenue:Math.round(y1.revenue),y3_ebitda:Math.round((R.years[2]||y1).ebitda),peak_customer_float:Math.round(R.peakFloat),min_cash:Math.round(R.minCash)}};
+  $('json').value=JSON.stringify(j,null,2);}
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('json').value);$('copied').textContent='Copied.'}catch(e){$('json').select();$('copied').textContent='Selected. Press Ctrl/Cmd+C.'}};
+
+function run(){save();R=sim(P);const y=R.years,y3=y[2]||y[y.length-1],o24=R.out[24];
+  const bare=sim(Object.assign({},P,OFF,{mkt:P.mkt}));
+  const L=LK();
+  $('finding').textContent=R.breakEven?`${L.city}, ${R.p.courts} courts, ${ROOFS[R.p.roof].label.toLowerCase()}: break-even in month ${R.breakEven}, ${f$(y3.ebitda)} EBITDA by year 3`:`${L.city}, ${R.p.courts} courts, ${ROOFS[R.p.roof].label.toLowerCase()}: no break-even within three years at these settings`;
+  $('subline').textContent=`Base running cost $${Math.round(R.p.baseOpex/1000)}k a year × ${R.p.costIdx.toFixed(2)} local cost index × ${ROOFS[R.p.roof].opex} for the roof. Rentals alone would make ${f$(bare.years[2].ebitda)} in year 3; everything above that comes from the upsells switched on in the levers.`;
+  const K=[[f$(y[0].revenue),'Year 1 revenue'],[f$(y3.ebitda),'Year 3 EBITDA'],[R.breakEven?'Month '+R.breakEven:'None','Break-even'],[f$(R.peakFloat),'Peak cash prepaid by customers'],[pct(o24.peakFill)+' / '+pct(o24.offFill),'Peak / off-peak full, M24'],[`${fn(o24.K)} · ${fn(o24.starterNew||0)}`,'Kids in academy · new players from tasters a month, M24']];
+  $('kpis').innerHTML=K.map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');
+  const m3=R.out.slice(25),share=k=>m3.reduce((a,o)=>a+o.rev[k],0)/m3.reduce((a,o)=>a+o.revenue,0);
+  $('revLede').textContent=`In year 3, court rentals are ${pct(share('courtPeak')+share('courtOff'))} of revenue; memberships, kids, coaching, events, B2B and automation make up the other ${pct(1-share('courtPeak')-share('courtOff'))}. The dashed line is total running cost.`;
+  const pk=R.out.reduce((a,o)=>(o.float||0)>(a.float||0)?o:a,R.out[0]);
+  $('floatLede').textContent=`Money customers hand over before they use it. It peaks at ${f$(R.peakFloat)} in month ${pk.m}, plus a ${f$(R.presale)} founding presale before opening.`;
+  const D=pk.def||{found:R.presale},FL=[['found','Founding presale'],['annual','Annual memberships'],['wallet','Wallet credit'],['kids','Academy terms'],['corp','Corporate packages'],['sponsor','Sponsor fees']].map(([k,l])=>({l,v:D[k]||0,c:'#f2694d'})).filter(r=>r.v>1);
+  bars($('floatMix'),FL.length?FL:[{l:'No prepayment',v:0}],Math.max(...FL.map(r=>r.v),1),f$);
+  drawSheet();drawHours();drawRev();drawFloat();drawGrowth();drawFunnel();weatherTable();pnl();milestones();archetype();
+  finance();modeCmp();siteCmp();guild();network();
+  clearTimeout(run.t);run.t=setTimeout(()=>{const best=roofCards();advice(impact(),best);compare();sites();},90);}
+
+$('assump').innerHTML=`<p>Courts open 07:00–23:00 (smart access adds 06:00 and 23:00 unstaffed). Each city sets its own peak windows and prices; four players per court-hour. Demand is modelled for every weekday and weekend hour: a resident curve (office-worker intensity moves weekday demand out of 07:00–17:00 and into 18:00–22:00), a visitor curve (daytime and late afternoon, scaled by each month's visitor index), and a local calendar (Spring Festival, Songkran, August in Madrid, Dubai summer).</p>
+<p>Competition and growth: the existing player base grows each month (category growth) and is split between your courts and competitors' (each competing court counts 0.35–0.6 of yours, depending on how spread out the city is); competitor courts grow each year. New-to-padel people are a separate pool: taster sessions, kids and family plans convert them into regulars who are yours rather than shared. Mini-padel splits a court into two smaller ones for under-8s (assumed ~40% of the academy), raising academy capacity 40%.</p>
+<p>Weather: each month's mean high and rain days set the share of demand that still plays in each hour. Heat above 29°C cuts 11:00–16:00 hardest and above 35°C cuts all hours; cold below 14°C cuts evenings; rain removes rain-days/30 × 80% of open-air play. A roof with open sides keeps 45% of the heat loss and 12% of the rain loss; enclosed AC courts keep none, cost 12% more to run plus AC power per court-hour, and let you charge about 15% more. Covered and indoor clubs also pick up some players rained off open courts. Climate figures are long-run normals, rounded. Prices come from 2026 club listings converted to USD where available (Shenzhen and Shanghai are estimates); the cost index scales the base running cost to local rent and wages.</p>
+<p>Base running cost ($100k a year by default) covers lease, utilities, insurance, booking software and a basic staff rota for 3 courts; each extra court adds $26k a year and $20k fit-out. Court-hour costs are $5 an hour plus 2.5% payment fees. Staff step up by $2.5k a month once two programmes run, again at four, and a front-desk shift is added at 600 and 1,200 active players (half that with smart access).</p>
+<p>Casual players play about 2 times a month, members 4.5; casual churn is 7% a month, monthly members 3%, annual members 1.2%, kids 3.5%. Peak demand above 90% capacity raises churn and slows referrals. Unmet peak demand partly moves to off-peak, more when off-peak is cheaper.</p>
+<p>New players come from a base trickle of booking-app discovery, paid marketing at $35 a player, the audience, referrals, socials, parents of new kids, corporate events and tournaments, all slowed as the catchment fills. Brand (0–100) rises with audience, tournaments, kids and socials and raises conversion, sponsorship value and tournament entries. Court sponsors sign once brand passes 30.</p>
+<p>Prepaid money is tracked as balances: founding seats run down over 12 months, annual plans hold about 6 months, wallets 1.5 months of wallet spend, academy terms 1.5 months, corporate packages half a year, sponsors the unexpired part of the year. Cash each month is EBITDA plus the change in those balances. Benchmarks used for calibration: break-even around 40–55% blended utilisation and off-peak typically 10–35% full (industry guides, 2026). Figures are a model, not a forecast; no tax, debt service or depreciation.</p>`;
+renderLoc();renderLevers();makeLineCharts();run();
+}
+</script></body></html>
