@@ -88,13 +88,92 @@ pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
 @media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}.two{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.bars .r{grid-template-columns:110px minmax(0,1fr) 78px;font-size:13px}table{font-size:13px}#sheetFig{min-height:300px}}
 @media(prefers-reduced-motion:no-preference){.bars .t i{transition:width .35s ease}}
+
+/* ---- categories: one scroll, each topic group collapses to a digest line ---- */
+.jump{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);margin:0 0 18px}
+.jump .in{display:flex;gap:6px;overflow-x:auto;padding:10px 0;scrollbar-width:thin}
+.jump a{flex:none;font-size:13px;font-weight:600;color:var(--mut);text-decoration:none;padding:7px 12px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.jump a:hover{border-color:var(--court);color:var(--ink)}
+.cat{border:1px solid var(--line);border-radius:14px;margin:0 0 14px;background:var(--bg);scroll-margin-top:64px}
+.cat>summary{list-style:none;cursor:pointer;padding:16px 18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.cat>summary::-webkit-details-marker{display:none}
+.cat>summary .ci{grid-column:1;grid-row:1/3;width:30px;height:30px;border-radius:8px;background:var(--court);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:800}
+.cat>summary h2{grid-column:2;grid-row:1;margin:0;font-size:clamp(19px,2vw,23px)}
+.cat>summary .cd{grid-column:2;grid-row:2;color:var(--mut);font-size:13.5px;line-height:1.4}
+.cat>summary .cx{grid-column:3;grid-row:1/3;align-self:start;color:var(--mut);font-size:22px;line-height:1}
+.cat[open]>summary .cx::after{content:"–"}.cat:not([open])>summary .cx::after{content:"+"}
+.cat[open]>summary{border-bottom:1px solid var(--line)}
+.cat .cbody{padding:4px 18px 10px}
+.cat .cbody>section.blk{padding:20px 0;border-bottom:1px solid var(--line)}
+.cat .cbody>section.blk:last-child{border-bottom:0}
+.cat .cbody>section.blk>h2{font-size:18px}
+.catsum{grid-column:2;grid-row:3;display:flex;flex-wrap:wrap;gap:4px 16px;padding:6px 0 0;font-size:13px;color:var(--mut)}
+.catsum b{color:var(--ink);font-weight:700}
+.cat[open] .catsum{display:none}
+
+/* ---- second layer: each text-heavy topic collapses to its title + a 2-line digest ---- */
+.sub>summary{list-style:none;cursor:pointer;padding:14px 0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;align-items:start}
+.sub>summary::-webkit-details-marker{display:none}
+.sub>summary h2{grid-column:1;grid-row:1;font-size:17px;margin:0}
+.sub>summary .lede{grid-column:1;grid-row:2;margin:0;font-size:13.5px;line-height:1.45}
+.sub>summary .sx{grid-column:2;grid-row:1/3;color:var(--mut);font-size:18px;line-height:1.2}
+.sub[open]>summary .sx::after{content:"–"}.sub:not([open])>summary .sx::after{content:"+"}
+.sub:not([open])>summary .lede{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sub .subbody{padding:2px 0 14px}
+.cat .cbody>section.blk{padding:0}
+.cat .cbody>section.blk+.blk{border-top:1px solid var(--line)}
+
+/* ---- hero picker collapses on mobile ---- */
+.pick>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px 12px;margin-top:16px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.08);font-weight:600;font-size:14px}
+.pick>summary::-webkit-details-marker{display:none}
+.pick>summary .px::after{content:"–";color:#c9d8f6}
+.pick:not([open])>summary .px::after{content:"+"}
+@media(min-width:901px){.pick>summary{display:none}}
+
+/* ---- optimizations catalogue ---- */
+.optbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+.optbar select,.optbar input{font:inherit;font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-height:40px}
+.optgrp{margin:0 0 18px}
+.optgrp h3{font-size:15px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px}
+.opt{background:var(--card);border-radius:10px;margin-bottom:8px;border-left:4px solid var(--auto)}
+.opt.on{border-left-color:var(--court)}
+.opt>summary{list-style:none;cursor:pointer;padding:11px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:baseline}
+.opt>summary::-webkit-details-marker{display:none}
+.opt .on-l{font-weight:700;font-size:15px}
+.opt .on-d{color:var(--mut);font-size:13px;line-height:1.45;margin:0;padding:0 14px 12px}
+.opt .on-m{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:13px;margin-top:2px}
+.opt .on-m span{color:var(--mut)}.opt .on-m b{color:var(--ink)}
+.opt .on-v{font-weight:800;font-size:17px;white-space:nowrap;text-align:right}
+.opt button{min-height:32px;padding:4px 10px;font-size:13px}
+.eff{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
+.eff.Low{color:var(--pos);border-color:var(--pos)}.eff.High{color:var(--coral);border-color:var(--coral)}
+
+/* ---- levers: search + mobile drawer ---- */
+.lvfind{width:100%;font:inherit;font-size:14px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin:0 0 10px;min-height:42px}
+.lvhide{display:none!important}
+.lvcount{font-size:12px;color:var(--mut);margin:0 0 8px}
+#lvToggle{display:none}
+@media(max-width:900px){
+  .cat>summary{padding:14px}
+  .cat{scroll-margin-top:104px}
+  .cat .cbody{padding:2px 14px 8px}
+  .catsum{padding:6px 0 0;font-size:12.5px}
+  #lvToggle{display:block;width:100%;position:sticky;top:52px;z-index:20;margin:0 0 12px;background:var(--court);color:#fff;border-color:var(--court)}
+  aside{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;background:var(--bg)}
+  aside.lvshut{display:none}
+  .lv input[type=range]{height:36px}
+  .opt>summary{padding:11px 12px}
+  .opt .on-d{padding:0 12px 11px}
+}
 </style></head><body>
 <header class="band hero"><div class="wrap">
   <h1 id="finding">Padel club tycoon</h1>
   <p class="sub" id="subline">A Tycoonify archetype for a 3-court rental club: hourly courts, automation, kids, brand and prepaid funding, simulated month by month for three years.</p>
+  <details class="pick" id="pick" open><summary><span id="pickSum">City and roof</span><span class="px" aria-hidden="true"></span></summary>
   <div class="locbar"><div class="cities" id="cities" role="group" aria-label="City"></div>
     <div class="roofs" id="roofs" role="group" aria-label="Roof"></div></div>
-  <p class="locnote" id="locNote"></p>
+  <p class="locnote" id="locNote"></p></details>
   <div class="kpis" id="kpis"></div>
   <div class="sheetHead">
     <h3>The booking sheet, an average week in <span id="mLabel">month 19</span></h3>
@@ -105,14 +184,18 @@ pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
 </div></header>
 
 <div class="band"><div class="main">
-<aside>
+<button id="lvToggle" type="button" aria-expanded="false" aria-controls="rail">Show levers</button>
+<aside id="rail">
   <h2>Levers</h2>
   <p class="note">Start from a playbook, then tune. Opening month is January; month 0 is the pre-launch presale.</p>
   <div class="presets" id="presets"></div>
+  <input id="lvfind" class="lvfind" type="search" placeholder="Find a lever — price, kids, roof, debt…" aria-label="Find a lever">
+  <p class="lvcount" id="lvcount"></p>
   <div id="levers"></div>
   <p class="note" style="margin-top:12px"><button id="reset" type="button">Reset to defaults</button></p>
 </aside>
 <main>
+  <nav class="jump" id="jump" aria-label="Sections"><div class="in"></div></nav>
   <section class="blk" style="padding-top:0"><h2>What to do next</h2><p class="lede">Read off the current run: where the money is stuck and which lever unsticks it.</p><ul class="advice" id="advice"></ul></section>
 
   <section class="blk"><h2 id="wxTitle">Weather, roof and traffic</h2><p class="lede" id="wxLede"></p>
@@ -129,9 +212,17 @@ pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
     <div class="legend" id="revLegend" style="color:var(--mut)"></div>
     <div class="fig"><svg id="revChart" role="img" aria-label="Stacked monthly revenue by stream with opex line"></svg></div></section>
 
-  <section class="blk"><h2>What each upsell is worth</h2>
-    <p class="lede">Each row re-runs the 36 months with that one module switched off (or on, if it is currently off). Left bar: 36-month EBITDA. Right figure: extra cash customers prepay at the peak.</p>
-    <div class="bars" id="impact"></div></section>
+  <section class="blk"><h2>Ways to improve the operation</h2>
+    <p class="lede">Every module re-run over the 36 months with it switched off — or on, if it is off now — grouped by what part of the business it touches. Δ EBITDA and prepaid cash come from the model. Setup cost and effort are editorial estimates, not model inputs.</p>
+    <div class="optbar">
+      <label class="small" for="optSort">Sort</label>
+      <select id="optSort"><option value="value">Biggest EBITDA gain</option><option value="payback">Fastest payback</option><option value="cost">Lowest setup cost</option><option value="effort">Least effort</option><option value="cash">Most prepaid cash</option></select>
+      <label class="small" for="optFilter">Show</label>
+      <select id="optFilter"><option value="all">Everything</option><option value="off">Not switched on yet</option><option value="on">Already running</option><option value="pos">Only what helps</option></select>
+      <input id="optFind" type="search" placeholder="Filter actions…" aria-label="Filter actions">
+    </div>
+    <div id="optList"></div>
+    <details style="margin-top:12px"><summary class="small">Bar chart view</summary><div class="bars" id="impact" style="margin-top:10px"></div></details></section>
 
   <section class="blk two">
     <div><h2>Customer-funded capital</h2><p class="lede" id="floatLede"></p>
@@ -178,9 +269,12 @@ pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
   <section class="blk"><h2>Annual P&amp;L</h2><div class="scroll"><table id="pnl"></table></div></section>
   <section class="blk"><h2>Milestones</h2><div class="ms" id="ms"></div></section>
   <section class="blk"><h2>Export as a Tycoonify archetype</h2>
-    <p class="lede">Same schema as the repo's presets (schema_version 1.1.0, type B "Service / Hourly", monthly periods), filled from the current levers. Paste into the archetype repo or the game's mod import.</p>
-    <p><button id="copy" type="button">Copy JSON</button> <span class="small" id="copied"></span></p>
-    <textarea id="json" readonly aria-label="Archetype JSON"></textarea></section>
+    <p class="lede">Same schema as the repo's presets (schema_version 1.1.0, type B "Service / Hourly", monthly periods), filled from the current levers. The <code>overrides</code> block carries every lever, toggle, the network plan and the site list, so a scenario round-trips exactly.</p>
+    <p><button id="copy" type="button">Copy JSON</button> <button id="link" type="button">Copy scenario link</button> <span class="small" id="copied"></span></p>
+    <textarea id="json" readonly aria-label="Archetype JSON"></textarea>
+    <p class="lede" style="margin-top:16px">Load a scenario: paste an exported archetype, or just its <code>overrides</code> block.</p>
+    <p><button id="impGo" type="button">Load scenario</button> <span class="small" id="impMsg"></span></p>
+    <textarea id="imp" aria-label="Scenario JSON to load" placeholder='{"overrides": { ... }}'></textarea></section>
   <section class="blk" style="border:0"><details><summary><b>Assumptions behind the model</b></summary>
     <div class="small" id="assump"></div></details></section>
 </main>
@@ -227,9 +321,15 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const LK=()=>LOCS[P.loc]||LOCS.shenzhen;
 const loc$=v=>{const L=LK(),x=v*L.fx;return L.ccy+(x>=10000?Math.round(x/1000).toLocaleString('en-US')+'k':Math.round(x/(x>=200?10:1))*(x>=200?10:1))};
 const fmtLv=(v,u,id)=>u==='$'?f$(v)+((id==='pricePeak'||id==='priceOff'||id==='memFee'||id==='kidsFee'||id==='starterPrice')&&LK().ccy!=='$'?` · ${loc$(v)}`:''):u==='%'?v+'%':u==='f%'?Math.round(v*100)+'%':u==='f%1'?(v*100).toFixed(1)+'%':u==='x'?(+v).toFixed(2)+'×':u==='f%1'?(v*100).toFixed(1)+'%':fn(v);
-const cityParams=(id,roof)=>{const L=LOCS[id],pr=ROOFS[roof].premium;return {proxOverride:null,calib:null,baseOpex:100000,courts:3,loc:id,roof,pricePeak:Math.round(L.peak*pr),priceOff:Math.round(L.off*pr),market:L.market,costIdx:L.costIdx,office:L.office,tourist:L.tourist,latent:L.latent,comp:L.comp,compGrowth:L.compGrowth,mktGrowth:L.mktGrowth,startPlayers:L.start||150,starterPrice:Math.max(3,Math.round(9*L.peak/42))}};
+const cityParams=(id,roof)=>{const L=LOCS[id],pr=ROOFS[roof].premium;return {proxOverride:null,calib:null,loc:id,roof,pricePeak:Math.round(L.peak*pr),priceOff:Math.round(L.off*pr),market:L.market,costIdx:L.costIdx,office:L.office,tourist:L.tourist,latent:L.latent,comp:L.comp,compGrowth:L.compGrowth,mktGrowth:L.mktGrowth,startPlayers:L.start||150,starterPrice:Math.max(3,Math.round(9*L.peak/42))}};
 const CITYKEYS=['proxOverride','calib','baseOpex','courts','loc','roof','pricePeak','priceOff','market','costIdx','office','tourist','latent','comp','compGrowth','mktGrowth','startPlayers','starterPrice'];
 const keepCity=()=>Object.fromEntries(CITYKEYS.map(k=>[k,P[k]]));
+const LVSPEC=Object.fromEntries(L.flatMap(([,items])=>items).filter(([,,mn])=>mn!==undefined).map(([id,,mn,mx,st,u])=>[id,{mn,mx,st,u}]));
+const lvMax=(id)=>id==='sponsorCourts'?P.courts:LVSPEC[id].mx;
+// Write state, slider bounds and label together: a lever changed in code must not leave a stale label.
+function syncLever(id){const sp=LVSPEC[id],el=$('lv_'+id);if(!sp||!el)return;
+  const mx=lvMax(id),v=Math.max(sp.mn,Math.min(mx,P[id]));P[id]=v;el.max=mx;el.value=v;
+  const o=$('o_'+id);if(o)o.textContent=fmtLv(v,sp.u,id);return v}
 if(!P)P=Object.assign({},DEF,PRESETS['Accessible family club'],cityParams('bangkok','covered'));
 
 
@@ -251,7 +351,7 @@ $('cities').addEventListener('click',e=>{const b=e.target.closest('button');if(!
 $('roofs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const old=ROOFS[P.roof].premium,nw=ROOFS[b.dataset.r].premium;P.roof=b.dataset.r;P.pricePeak=Math.round(P.pricePeak*nw/old);P.priceOff=Math.round(P.priceOff*nw/old);renderLoc();renderLevers();run()});
 $('levers').addEventListener('input',e=>{const el=e.target,id=el.dataset.id;if(!id)return;if(id==='siteType'){applySite(el.value);return;}if(id==='buildOn'||id==='convertOn'||id==='acquireOn'){P.capexMode=el.checked?{buildOn:'build',convertOn:'convert',acquireOn:'acquire'}[id]:'rent';['buildOn','convertOn','acquireOn'].filter(k=>k!==id).forEach(k=>{const o=$('lv_'+k);if(o)o.checked=false});}else P[id]=el.type==='checkbox'?(el.checked?1:0):+el.value;
   if(el.type!=='checkbox')$('o_'+id).textContent=fmtLv(P[id],el.dataset.u,id);
-  if(id==='courts'){P.sponsorCourts=Math.min(P.sponsorCourts,P.courts);const s=$('lv_sponsorCourts');s.max=P.courts}
+  if(id==='courts'){P.sponsorCourts=Math.min(P.sponsorCourts,P.courts);syncLever('sponsorCourts')}
   cur=null;document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));run()});
 function applySite(k){const st=SITETYPES[k];if(!st)return;const old=ROOFS[P.roof].premium,nw=ROOFS[st.p.roof].premium;Object.assign(P,st.p,{siteType:k,capexMode:'convert'});P.pricePeak=Math.round(P.pricePeak*nw/old);P.priceOff=Math.round(P.priceOff*nw/old);cur=null;renderLoc();renderLevers();run()}
 $('reset').onclick=()=>{P=Object.assign({},DEF,PRESETS['Accessible family club'],cityParams('bangkok','covered'));cur='Accessible family club';renderLoc();renderLevers();run()};
@@ -432,17 +532,54 @@ $('calSample').onclick=()=>{$('calIn').value=CAL_SAMPLE;$('calMsg').textContent=
 $('calClear').onclick=()=>{P.calib=null;P.demandScale=0.75;$('calMsg').textContent='Calibration cleared.';renderLevers();run()};
 $('calApply').onclick=()=>{const rows=$('calIn').value.trim().split(/\n+/).map(l=>l.split(/[,\t;]/).map(x=>x.trim())).filter(r=>r.length>=3&&/^(wd|we)$/i.test(r[0]));
   if(!rows.length){$('calMsg').textContent='No rows read. Use daytype,hour,occupancy.';return}
-  const base=sim(Object.assign({},P,{calib:null})),o=base.out[12],cal={wd:{},we:{}};let obsT=0,modT=0,n=0;
-  for(const [dt0,h0,v0] of rows){const dt=dt0.toLowerCase(),h=+h0;let v=parseFloat(v0);if(isNaN(v))continue;if(v0.includes('%')||v>1)v=v/100;const sl=o.slots.find(x=>x.dt===dt&&x.h===h);if(!sl||!sl.open||!sl.cap)continue;
-    const used=(sl.rent+sl.kids+sl.starter+sl.social+sl.corp+sl.coach)/sl.cap;cal[dt][h]=Math.max(0.2,Math.min(5,(v+0.03)/(used+0.03)));obsT+=v*sl.cap;modT+=used*sl.cap;n++}
-  const sc=modT>0?Math.max(0.3,Math.min(2,obsT/modT)):1;P.calib=cal;P.demandScale=Math.round(P.demandScale*sc*100)/100;
-  $('calMsg').textContent=`Fitted ${n} hours. Overall level ×${sc.toFixed(2)} (demand scale now ${P.demandScale}); hourly shape adjusted.`;renderLevers();run()};
+  const obs=[];
+  for(const [dt0,h0,v0] of rows){const dt=dt0.toLowerCase(),h=+h0;let v=parseFloat(v0);if(isNaN(v))continue;if(v0.includes('%')||v>1)v=v/100;obs.push({dt,h,v})}
+  // Measure against the model that will actually run (calibration included), so a refit is a no-op.
+  // calib only scales casual rental demand: academy, tasters, socials, corporate and coaching are
+  // placed first, so they form a floor the fit cannot go below.
+  const measure=()=>{const o=sim(P).out[12];let obsT=0,modT=0;const per=[];
+    for(const x of obs){const sl=o.slots.find(s=>s.dt===x.dt&&s.h===x.h);if(!sl||!sl.open||!sl.cap)continue;
+      const prog=(sl.kids+sl.starter+sl.social+sl.corp+sl.coach)/sl.cap,rent=sl.rent/sl.cap,used=prog+rent;
+      const fit=x.v>=prog-0.005&&x.v<=1.005;
+      const want=Math.max(0,x.v-prog);
+      per.push({dt:x.dt,h:x.h,v:x.v,used,prog,fit,err:Math.abs(used-x.v),
+        r:fit?Math.max(0.2,Math.min(5,(want+0.03)/(rent+0.03))):1});
+      obsT+=x.v*sl.cap;modT+=used*sl.cap}
+    return {per,n:per.length,ratio:modT>0?obsT/modT:1}};
+  let m=measure();
+  if(!m.n){$('calMsg').textContent='No usable hours. Rows must be open hours (07–22, plus 06 and 23 with smart access).';return}
+  const TOL=0.01;let iters=0,prevShape=Infinity,prevLevel=Infinity;
+  const ds0=P.demandScale,cal0=JSON.stringify(P.calib||null);
+  const shapeErr=()=>Math.max(0,...m.per.filter(x=>x.fit).map(x=>x.err));
+  for(;iters<8;iters++){
+    const sh=shapeErr(),lv=Math.abs(m.ratio-1);
+    if(sh<TOL&&lv<TOL)break;
+    // Stall only when neither part is still moving: a stuck shape must not mask a converging level.
+    if(iters>0&&sh>prevShape-0.002&&lv>prevLevel-0.002)break;
+    prevShape=sh;prevLevel=lv;
+    // Shape: calib is normalised to a pure shape by the engine, so it cannot carry the overall level.
+    const cal={wd:Object.assign({},(P.calib&&P.calib.wd)||{}),we:Object.assign({},(P.calib&&P.calib.we)||{})};
+    for(const x of m.per){if(!x.fit)continue;const old=(P.calib&&P.calib[x.dt]&&P.calib[x.dt][x.h])||1;cal[x.dt][x.h]=Math.max(0.2,Math.min(5,old*x.r))}
+    P.calib=cal;
+    // Level: re-measure with the new shape in place, then correct demandScale by that residual.
+    const m2=measure();if(m2.n)P.demandScale=Math.round(P.demandScale*Math.max(0.3,Math.min(2,m2.ratio))*100)/100;
+    syncLever('demandScale');m=measure();
+  }
+  const off=m.per.filter(x=>!x.fit).length,over=m.per.filter(x=>x.fit&&x.err>=TOL).length;
+  const lvl=Math.abs(m.ratio-1)<TOL?'overall level matches your data':`overall level still ×${m.ratio.toFixed(2)} off`;
+  const unchanged=P.demandScale===ds0&&JSON.stringify(P.calib||null)===cal0;
+  $('calMsg').textContent=unchanged?`Already fitted: ${m.n-off} of ${m.n} hours match your data. Nothing changed.`
+    :`Fitted ${m.n-off} of ${m.n} hours in ${iters||1} pass${iters>1?'es':''}; ${lvl}.`
+    +(off?` ${off} hour${off>1?'s':''} sit outside what demand can reach — academy, tasters, socials and corporate bookings already fill them past your numbers, or your numbers exceed capacity.`:'')
+    +(over?` ${over} hour${over>1?'s':''} still off by more than 1%.`:'')
+    +` Demand scale now ${P.demandScale}.`;
+  renderLevers();run()};
 function bars(el,rows,max,fmt){el.innerHTML=rows.map(r=>`<div class="r"><span>${r.l}${r.tag?`<span class="tag">${r.tag}</span>`:''}</span><span class="t"><i style="left:${r.v<0?50-Math.min(50,Math.abs(r.v)/max*50):r.center?50:0}%;width:${Math.min(r.center?50:100,Math.abs(r.v)/max*(r.center?50:100))}%;background:${r.v<0?'var(--neg)':r.c||'var(--court)'}"></i></span><span class="v ${r.v<0?'neg':''}">${fmt(r.v)}${r.extra||''}</span></div>`).join('')}
 
 const MODS=[['starterOn','First Rally tasters'],['miniOn','Mini-padel for under-8s'],['familyOn','Family plans'],['memOn','Memberships'],['annualShare','Annual upfront memberships',0],['foundOn','Founding presale'],['walletOn','Prepaid wallets'],['kidsOn','Junior academy'],['schools','School partnerships',0],['campsOn','Holiday camps'],['kidsPrepay','Term prepay for academy'],['coachOn','Adult coaching'],['socialsOn','Americanas & socials'],['tourOn','Monthly tournament'],['corpOn','Corporate packages'],['sponsorOn','Court sponsors'],['contentOn','Content & social'],['proEvent','Pro exhibition'],['smartAccess','Smart access'],['dynPricing','Dynamic pricing'],['replay','AI replay cameras'],['ballMachine','Ball machine'],['vending','Smart vending']];
 function impact(){const rows=MODS.map(([k,l,offV])=>{const on=!!P[k];const alt=Object.assign({},P,{[k]:on?(offV??0):(DEF[k]||1)});const r2=sim(alt);
    const dE=on?R.cumEbitda-r2.cumEbitda:r2.cumEbitda-R.cumEbitda;const dF=on?R.peakFloat-r2.peakFloat:r2.peakFloat-R.peakFloat;
-   return {l,v:dE,tag:on?'':'if added',extra:Math.abs(dF)>500?` <span class="tag">${dF>0?'+':'−'}${f$(Math.abs(dF))} prepaid</span>`:'',c:on?'var(--court)':'var(--auto)',center:1}}).sort((a,b)=>b.v-a.v);
+   return {k,on,l,v:dE,dF,tag:on?'':'if added',extra:Math.abs(dF)>500?` <span class="tag">${dF>0?'+':'−'}${f$(Math.abs(dF))} prepaid</span>`:'',c:on?'var(--court)':'var(--auto)',center:1}}).sort((a,b)=>b.v-a.v);
   const mx=Math.max(...rows.map(r=>Math.abs(r.v)),1);bars($('impact'),rows,mx,v=>(v>=0?'+':'')+f$(v));
   $('impact').querySelectorAll('.r').forEach(r=>r.style.gridTemplateColumns='');return rows;}
 
@@ -455,6 +592,7 @@ function drawFunnel(){const m=+$('month').value,o=R.out[m];
 function advice(rows,best){const L=LK();const out=[],o24=R.out[Math.min(24,R.out.length-1)],o36=R.out[R.out.length-1],y=R.years;
   const sold=R.out.find(o=>o.m&&o.peakFill>=.95);
   const lost=R.out.slice(-6).reduce((a,o)=>a+o.unmet,0)/6;
+  if(P.priceOff>P.pricePeak)out.unshift(['w',`Off-peak (${f$(P.priceOff)}) is priced above peak (${f$(P.pricePeak)}). The model runs it, but no club sells the quiet hours for more than the busy ones — check the two price levers before reading anything below.`]);
   if(sold)out.push(['w',`Peak is sold out from month ${sold.m}${lost>5?`, turning away about ${fn(lost)} court-hours a month`:', with no room left to grow'}. Try peak at ${f$(Math.round(R.p.pricePeak*1.15))} an hour, or plan a ${R.p.courts+1}th court.`]);
   if(o24.offFill<.4)out.push(['w',`Off-peak runs ${pct(o24.offFill)} full in month 24. Wallet bonuses, kids sessions, socials and a wider peak/off-peak price gap are the levers that fill it.`]);
   else out.push(['g',`Off-peak is ${pct(o24.offFill)} full by month 24, well above the 10–35% most clubs see.`]);
@@ -505,11 +643,12 @@ function archetype(){const p=R.p,y1=R.years[0],o12=R.out[12];
    display:{icon:'🎾',currency_symbol:'$',primary_metric_label:'Revenue goal'},
    location:{id:p.loc,city:LK().city,country:LK().country,roof:p.roof,local_currency:LK().ccy,fx_per_usd:LK().fx,cost_index:p.costIdx,office_intensity:p.office,visitor_share:p.tourist,peak_windows:{weekday:LK().peakWd,weekend:LK().peakWe},climate:{monthly_high_c:LK().hi,monthly_rain_days:LK().rain},visitor_season:LK().tSeason,local_calendar:LK().cal},
    inspector:{raw_input:null,assumptions_made:['Opening month January','Peak = weekdays 17–23, weekends 10–20','4 players per court-hour','Founding seats recognised over 12 months'],warnings:[],fill_sources:{all:'padel_club_tycoon'},overrides_by_player:[]},
+   overrides:scenario(),
    sim_snapshot:{break_even_month:R.breakEven,y1_revenue:Math.round(y1.revenue),y3_ebitda:Math.round((R.years[2]||y1).ebitda),peak_customer_float:Math.round(R.peakFloat),min_cash:Math.round(R.minCash)}};
   $('json').value=JSON.stringify(j,null,2);}
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('json').value);$('copied').textContent='Copied.'}catch(e){$('json').select();$('copied').textContent='Selected. Press Ctrl/Cmd+C.'}};
 
-function run(){save();R=sim(P);const y=R.years,y3=y[2]||y[y.length-1],o24=R.out[24];
+function runNow(){save();R=sim(P);const y=R.years,y3=y[2]||y[y.length-1],o24=R.out[24];
   const bare=sim(Object.assign({},P,OFF,{mkt:P.mkt}));
   const L=LK();
   $('finding').textContent=R.breakEven?`${L.city}, ${R.p.courts} courts, ${ROOFS[R.p.roof].label.toLowerCase()}: break-even in month ${R.breakEven}, ${f$(y3.ebitda)} EBITDA by year 3`:`${L.city}, ${R.p.courts} courts, ${ROOFS[R.p.roof].label.toLowerCase()}: no break-even within three years at these settings`;
@@ -522,9 +661,11 @@ function run(){save();R=sim(P);const y=R.years,y3=y[2]||y[y.length-1],o24=R.out[
   $('floatLede').textContent=`Money customers hand over before they use it. It peaks at ${f$(R.peakFloat)} in month ${pk.m}, plus a ${f$(R.presale)} founding presale before opening.`;
   const D=pk.def||{found:R.presale},FL=[['found','Founding presale'],['annual','Annual memberships'],['wallet','Wallet credit'],['kids','Academy terms'],['corp','Corporate packages'],['sponsor','Sponsor fees']].map(([k,l])=>({l,v:D[k]||0,c:'#f2694d'})).filter(r=>r.v>1);
   bars($('floatMix'),FL.length?FL:[{l:'No prepayment',v:0}],Math.max(...FL.map(r=>r.v),1),f$);
-  drawSheet();drawHours();drawRev();drawFloat();drawGrowth();drawFunnel();weatherTable();pnl();milestones();archetype();
-  finance();modeCmp();siteCmp();guild();network();
-  clearTimeout(run.t);run.t=setTimeout(()=>{const best=roofCards();advice(impact(),best);compare();sites();},90);}
+  drawSheet();drawHours();drawRev();drawFloat();drawGrowth();drawFunnel();weatherTable();pnl();milestones();archetype();finance();
+  // Comparison sections are ~20 simulations; they settle after the drag instead of on every tick.
+  clearTimeout(run.t);run.t=setTimeout(()=>{const best=roofCards();const ir=impact();advice(ir,best);catalogue(ir);compare();sites();modeCmp();siteCmp();guild();network();catDigests();},90)}
+// Coalesce bursts of slider input into one render per frame.
+function run(){if(run.raf)return;run.raf=requestAnimationFrame(()=>{run.raf=null;runNow()})}
 
 $('assump').innerHTML=`<p>Courts open 07:00–23:00 (smart access adds 06:00 and 23:00 unstaffed). Each city sets its own peak windows and prices; four players per court-hour. Demand is modelled for every weekday and weekend hour: a resident curve (office-worker intensity moves weekday demand out of 07:00–17:00 and into 18:00–22:00), a visitor curve (daytime and late afternoon, scaled by each month's visitor index), and a local calendar (Spring Festival, Songkran, August in Madrid, Dubai summer).</p>
 <p>Competition and growth: the existing player base grows each month (category growth) and is split between your courts and competitors' (each competing court counts 0.35–0.6 of yours, depending on how spread out the city is); competitor courts grow each year. New-to-padel people are a separate pool: taster sessions, kids and family plans convert them into regulars who are yours rather than shared. Mini-padel splits a court into two smaller ones for under-8s (assumed ~40% of the academy), raising academy capacity 40%.</p>
@@ -533,6 +674,192 @@ $('assump').innerHTML=`<p>Courts open 07:00–23:00 (smart access adds 06:00 and
 <p>Casual players play about 2 times a month, members 4.5; casual churn is 7% a month, monthly members 3%, annual members 1.2%, kids 3.5%. Peak demand above 90% capacity raises churn and slows referrals. Unmet peak demand partly moves to off-peak, more when off-peak is cheaper.</p>
 <p>New players come from a base trickle of booking-app discovery, paid marketing at $35 a player, the audience, referrals, socials, parents of new kids, corporate events and tournaments, all slowed as the catchment fills. Brand (0–100) rises with audience, tournaments, kids and socials and raises conversion, sponsorship value and tournament entries. Court sponsors sign once brand passes 30.</p>
 <p>Prepaid money is tracked as balances: founding seats run down over 12 months, annual plans hold about 6 months, wallets 1.5 months of wallet spend, academy terms 1.5 months, corporate packages half a year, sponsors the unexpired part of the year. Cash each month is EBITDA plus the change in those balances. Benchmarks used for calibration: break-even around 40–55% blended utilisation and off-peak typically 10–35% full (industry guides, 2026). Figures are a model, not a forecast; no tax, debt service or depreciation.</p>`;
-renderLoc();renderLevers();makeLineCharts();run();
+/* ---------- optimizations playbook ----------
+   g = operator category, e = effort to run it, s = editorial launch cost on top of modelled capex.
+   Δ EBITDA / prepaid cash are simulated; setup and effort are estimates, not model inputs. */
+const PLAYBOOK={
+ kidsOn:{g:'Kids & pipeline',e:'High',s:3000,d:'A junior academy: recurring term fees, and parents who become players. Needs coaches, safeguarding and a fixed weekly slot.'},
+ miniOn:{g:'Kids & pipeline',e:'Medium',s:0,d:'Split a court into two undersized ones for under-8s, lifting academy capacity about 40%.'},
+ schools:{g:'Kids & pipeline',e:'Medium',s:1500,d:'Partner schools feed the academy and the family base at almost no acquisition cost.'},
+ campsOn:{g:'Kids & pipeline',e:'Medium',s:2000,d:'Holiday camps fill daytime hours that adults never buy, and convert into term enrolments.'},
+ starterOn:{g:'Kids & pipeline',e:'Medium',s:0,d:'Cheap first-rally tasters. The main tap for people who have never played.'},
+ memOn:{g:'Members & prepaid cash',e:'Low',s:500,d:'Memberships trade a discount for frequency and much lower churn.'},
+ annualShare:{g:'Members & prepaid cash',e:'Low',s:0,d:'Push members onto annual upfront plans: cash today, and churn roughly a third of monthly.'},
+ walletOn:{g:'Members & prepaid cash',e:'Low',s:800,d:'Prepaid wallets pull cash forward and lift visit frequency through the bonus credit.'},
+ foundOn:{g:'Members & prepaid cash',e:'Medium',s:2500,d:'Founding seats sold before opening — customer money that funds the fit-out.'},
+ kidsPrepay:{g:'Members & prepaid cash',e:'Low',s:300,d:'Academy terms paid upfront instead of monthly.'},
+ familyOn:{g:'Members & prepaid cash',e:'Low',s:300,d:'Family plans bring a second adult and keep the household in the club.'},
+ coachOn:{g:'Programming & yield',e:'Medium',s:2500,d:'Adult coaching raises revenue per court-hour and feeds the membership base.'},
+ socialsOn:{g:'Programming & yield',e:'Low',s:400,d:'Americanas and socials fill off-peak slots with strangers, and build the audience.'},
+ tourOn:{g:'Programming & yield',e:'Medium',s:1200,d:'A monthly tournament: entry fees, bar spend and brand.'},
+ proEvent:{g:'Programming & yield',e:'High',s:15000,d:'A pro exhibition buys brand and sponsors, but blocks courts and costs real money.'},
+ dynPricing:{g:'Programming & yield',e:'Low',s:0,d:'Charge more where demand is already tight; lifts off-peak yield about 12%.'},
+ corpOn:{g:'B2B & brand',e:'High',s:2000,d:'Corporate packages sell weekday blocks in advance to one buyer.'},
+ sponsorOn:{g:'B2B & brand',e:'Medium',s:1500,d:'Court sponsors pay annually once brand clears 30 — near-pure margin.'},
+ contentOn:{g:'B2B & brand',e:'Medium',s:3000,d:'Content and social build the audience that lowers acquisition cost everywhere else.'},
+ smartAccess:{g:'Automation & cost',e:'Medium',s:0,d:'Unstaffed early and late hours, and roughly half the front-desk cost.'},
+ replay:{g:'Automation & cost',e:'Medium',s:0,d:'AI replay cameras: a paid add-on per court-hour and a reason to share the club.'},
+ ballMachine:{g:'Automation & cost',e:'Low',s:0,d:'Ball machine rental fills solo off-peak hours.'},
+ vending:{g:'Automation & cost',e:'Low',s:0,d:'Smart vending: margin on drinks and balls with no staff attached.'}
+};
+const OPTG=['Kids & pipeline','Members & prepaid cash','Programming & yield','B2B & brand','Automation & cost'];
+const modelCapex=k=>k==='smartAccess'?AUTO.smartAccess.capex:k==='replay'?AUTO.replay.capexCourt*P.courts:k==='ballMachine'?AUTO.ballMachine.capex:k==='vending'?AUTO.vending.capex:k==='starterOn'?2000:k==='miniOn'?1500:0;
+let OPTROWS=[];
+function catalogue(rows){
+  if(rows)OPTROWS=rows;
+  const sort=$('optSort').value,filter=$('optFilter').value,q=$('optFind').value.trim().toLowerCase(),EFF={Low:0,Medium:1,High:2};
+  let items=OPTROWS.map(r=>{const m=PLAYBOOK[r.k]||{g:'Programming & yield',e:'Medium',s:0,d:''};
+    const setup=modelCapex(r.k)+m.s,monthly=r.v/36;
+    const payback=r.v<=0?null:setup===0?0:setup/monthly;
+    return Object.assign({},r,m,{setup,payback})});
+  if(filter==='off')items=items.filter(i=>!i.on);
+  else if(filter==='on')items=items.filter(i=>i.on);
+  else if(filter==='pos')items=items.filter(i=>i.v>0);
+  if(q)items=items.filter(i=>(i.l+' '+i.d+' '+i.g).toLowerCase().includes(q));
+  const cmp={value:(a,b)=>b.v-a.v,payback:(a,b)=>(a.payback??1e9)-(b.payback??1e9),cost:(a,b)=>a.setup-b.setup||b.v-a.v,effort:(a,b)=>EFF[a.e]-EFF[b.e]||b.v-a.v,cash:(a,b)=>b.dF-a.dF}[sort];
+  items.sort(cmp);
+  const card=i=>{const pb=i.payback==null?'no payback':i.payback<1?'under a month':Math.round(i.payback)+' mo';
+    return `<details class="opt ${i.on?'on':''}"><summary><span class="on-l">${i.l}</span><span class="on-v ${i.v<0?'neg':''}">${i.v>=0?'+':'−'}${f$(Math.abs(i.v))}</span>
+    <span class="on-m"><span>Setup <b>${i.setup?f$(i.setup):'$0'}</b></span><span>Payback <b>${pb}</b></span><span>Effort <b class="eff ${i.e}">${i.e}</b></span>
+    ${Math.abs(i.dF)>500?`<span>Prepaid <b>${i.dF>0?'+':'−'}${f$(Math.abs(i.dF))}</b></span>`:''}
+    <span>${i.on?'Running now':'Not on yet'}</span><button type="button" data-opt="${i.k}">${i.on?'Switch off':'Switch on'}</button></span></summary>
+    <p class="on-d">${i.d}</p></details>`};
+  const groups={};items.forEach(i=>{(groups[i.g]=groups[i.g]||[]).push(i)});
+  $('optList').innerHTML=OPTG.filter(g=>groups[g]).map(g=>`<div class="optgrp"><h3>${g} <span class="small">${groups[g].length}</span></h3>${groups[g].map(card).join('')}</div>`).join('')||'<p class="small">Nothing matches that filter.</p>';
+}
+$('optList').addEventListener('click',e=>{const b=e.target.closest('button[data-opt]');if(!b)return;
+  e.preventDefault(); // the button lives in a summary; do not also toggle the card
+  const k=b.dataset.opt,mod=MODS.find(m=>m[0]===k);if(!mod)return;
+  P[k]=P[k]?(mod[2]??0):(DEF[k]||1);renderLevers();run()});
+['optSort','optFilter'].forEach(id=>$(id).addEventListener('change',()=>catalogue()));
+$('optFind').addEventListener('input',()=>catalogue());
+
+/* ---------- categories ---------- */
+const CATS=[
+ {id:'overview',n:'Overview',d:'The headline, what to do next, and the milestones on the way',open:true,keys:['advice','ms']},
+ {id:'actions',n:'Optimizations',d:'Every way to improve the operation, ranked by what it is worth',open:true,keys:['optList']},
+ {id:'demand',n:'Demand & pricing',d:'Who plays, when, in what weather, against which competitors',keys:['wx','cmp']},
+ {id:'revenue',n:'Revenue & customers',d:'Where the money comes from, and the cash customers hand over early',keys:['revChart','floatChart']},
+ {id:'capital',n:'Costs & capital',d:'What it costs to build, how it is funded, and the yearly accounts',keys:['finKpis','pnl']},
+ {id:'growth',n:'Growth & portfolio',d:'Partner courts, more sites, and which kind of building to take',keys:['gKpis','netT','siteIn']},
+ {id:'model',n:'Model & data',d:'Calibrate against real bookings, read the assumptions, export a scenario',keys:['calIn','assump','json']}
+];
+function buildCategories(){
+  const main=document.querySelector('main'),nav=$('jump').querySelector('.in');
+  const secs=[...main.querySelectorAll('section.blk')];
+  CATS.forEach((c,i)=>{
+    const d=document.createElement('details');d.className='cat';d.id='cat-'+c.id;if(c.open)d.open=true;
+    const s=document.createElement('summary');
+    s.innerHTML=`<span class="ci">${i+1}</span><h2>${c.n}</h2><span class="cd">${c.d}</span><span class="cx" aria-hidden="true"></span><span class="catsum" id="sum-${c.id}"></span>`;
+    d.appendChild(s);
+    const body=document.createElement('div');body.className='cbody';
+    c.keys.forEach(k=>{const el=document.getElementById(k),sec=el&&el.closest('section.blk');if(sec&&secs.includes(sec)&&sec.parentElement===main)body.appendChild(sec)});
+    d.appendChild(body);main.appendChild(d);
+    // charts measure their container, so a panel must redraw when it is first revealed
+    d.addEventListener('toggle',()=>{if(d.open&&R)run()});
+    const a=document.createElement('a');a.href='#cat-'+c.id;a.textContent=c.n;
+    a.addEventListener('click',e=>{e.preventDefault();d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'})});
+    nav.appendChild(a);
+  });
+  secs.filter(s=>s.parentElement===main).forEach(s=>main.appendChild(s));
+  accordionise();
+}
+// Second layer: title + a two-line digest stay visible; the body opens on demand.
+function accordionise(){
+  document.querySelectorAll('.cat .cbody > section.blk').forEach(sec=>{
+    const h=sec.querySelector(':scope > h2');if(!h)return; // skip the two-column blocks
+    const d=document.createElement('details');d.className='sub';
+    const s=document.createElement('summary'),body=document.createElement('div');body.className='subbody';
+    s.appendChild(h);
+    const lede=sec.querySelector(':scope > .lede');if(lede)s.appendChild(lede);
+    const x=document.createElement('span');x.className='sx';x.setAttribute('aria-hidden','true');s.appendChild(x);
+    d.appendChild(s);
+    while(sec.firstChild)body.appendChild(sec.firstChild);
+    d.appendChild(body);sec.appendChild(d);
+    if(sec.querySelector('#advice,#optList'))d.open=true;
+    d.addEventListener('toggle',()=>{if(d.open&&R)run()});
+  });
+}
+function catDigests(){
+  const y3=R.years[2]||R.years[R.years.length-1],o24=R.out[24],F=R.fin||{};
+  const notOn=OPTROWS.filter(r=>!r.on&&r.v>0).sort((a,b)=>b.v-a.v);
+  const m3=R.out.slice(25),rent=m3.reduce((a,o)=>a+o.rev.courtPeak+o.rev.courtOff,0)/m3.reduce((a,o)=>a+o.revenue,0);
+  const D={
+    overview:[['Break-even',R.breakEven?'month '+R.breakEven:'not in 36'],['Year 3 EBITDA',f$(y3.ebitda)],['Actions flagged',$('advice').children.length]],
+    actions:[['Not yet switched on',OPTROWS.filter(r=>!r.on).length],['Best next move',notOn[0]?notOn[0].l:'—'],['Worth',notOn[0]?'+'+f$(notOn[0].v):'—']],
+    demand:[[LK().city,R.p.courts+' courts'],['Peak full',pct(o24.peakFill)],['Off-peak full',pct(o24.offFill)]],
+    revenue:[['Rentals share of revenue',pct(rent)],['Peak prepaid float',f$(R.peakFloat)],['Presale',f$(R.presale)]],
+    capital:[['Upfront',f$(F.capex||0)],['Owner money needed',f$(F.equity0||0)],['Lowest cash',f$(R.minCash)]],
+    growth:[['Sites planned',(NET&&NET.length)||0],['Partner courts',P.guildOn?'on':'off'],['City',LK().city]],
+    model:[['Calibrated',P.calib?'yes':'no'],['Levers changed',Object.keys(pDiff()).length],['Scenario','exportable']]
+  };
+  CATS.forEach(c=>{const el=$('sum-'+c.id);if(el)el.innerHTML=(D[c.id]||[]).map(([k,v])=>`<span>${k} <b>${v}</b></span>`).join('')});
+  $('pickSum').textContent=`${LK().city} · ${ROOFS[P.roof].label} · ${R.p.courts} courts — change`;
+}
+
+/* ---------- lever search + mobile drawer ---------- */
+// Operators search by concept ("debt", "staffing"), not by the label wording.
+const LVWORDS={debtShare:'debt loan financing leverage borrow',rate:'debt loan interest financing apr',termYears:'debt loan financing amortisation',
+ startCash:'cash funding capital working',capexMode:'build convert acquire buy rent funding',mkt:'marketing acquisition spend',
+ mktGrowth:'market category growth',comp:'competition competitors rival',compGrowth:'competition competitors rival',
+ kidsOn:'children junior academy',schools:'children kids academy',campsOn:'children kids holiday',miniOn:'children kids junior',
+ pricePeak:'pricing price',priceOff:'pricing price discount offpeak',memFee:'membership price',
+ smartAccess:'staff staffing automation unstaffed',baseOpex:'costs overhead opex rent',extraCourtOpex:'costs overhead opex',
+ sponsorOn:'b2b brand sponsorship',corpOn:'b2b corporate brand',contentOn:'brand audience marketing social',
+ guildOn:'partner network franchise',demandScale:'calibration demand'};
+function filterLevers(q){
+  q=(q||'').trim().toLowerCase();
+  const groups=[...$('levers').querySelectorAll('details.g')];let shown=0,total=0;
+  groups.forEach((g,gi)=>{
+    const rows=[...g.querySelectorAll('.lv,.tg')];let hit=0;
+    const gmatch=q&&g.querySelector('summary').textContent.toLowerCase().includes(q);
+    rows.forEach(r=>{total++;
+      const ctl=r.querySelector('input,select'),key=ctl?ctl.id.replace(/^lv_/,''):'';
+      const hay=(r.textContent+' '+key.replace(/([a-z0-9])([A-Z])/g,'$1 $2')+' '+(LVWORDS[key]||'')).toLowerCase();
+      const ok=!q||gmatch||hay.includes(q);r.classList.toggle('lvhide',!ok);if(ok)hit++});
+    g.classList.toggle('lvhide',!!q&&hit===0);
+    g.open=q?hit>0:gi<3;
+    shown+=hit;
+  });
+  $('lvcount').textContent=q?`${shown} of ${total} levers match “${q}”`:'';
+}
+const _renderLevers=renderLevers;
+renderLevers=function(){_renderLevers();filterLevers($('lvfind').value)};
+$('lvfind').addEventListener('input',e=>filterLevers(e.target.value));
+const rail=$('rail'),lvt=$('lvToggle');
+const setRail=open=>{rail.classList.toggle('lvshut',!open);lvt.setAttribute('aria-expanded',String(open));lvt.textContent=open?'Hide levers':'Show levers'};
+lvt.addEventListener('click',()=>setRail(rail.classList.contains('lvshut')));
+if(matchMedia('(max-width:900px)').matches){setRail(false);$('pick').open=false}
+
+/* ---------- scenario: full-fidelity export, link and import ---------- */
+function pDiff(){const d={};for(const k in P)if(JSON.stringify(P[k])!==JSON.stringify(DEF[k]))d[k]=P[k];return d}
+function scenario(){const s={v:1,cur,p:pDiff()};
+  if(JSON.stringify(NET)!==JSON.stringify(DEFNET))s.net=NET;
+  if(SITE&&JSON.stringify(SITE)!==JSON.stringify(SITES))s.sites=SITE;
+  return s}
+const b64e=s=>{const b=new TextEncoder().encode(s);let t='';for(let i=0;i<b.length;i++)t+=String.fromCharCode(b[i]);return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+const b64d=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');const t=atob(s),b=new Uint8Array(t.length);for(let i=0;i<t.length;i++)b[i]=t.charCodeAt(i);return new TextDecoder().decode(b)};
+function applyScenario(s){
+  if(!s||typeof s!=='object')throw new Error('not a scenario object');
+  const p=s.p||(s.overrides&&s.overrides.p)||s.overrides||s;
+  if(!p||typeof p!=='object'||!Object.keys(p).some(k=>k in DEF))throw new Error('no lever state found');
+  P=Object.assign({},DEF,p);
+  if(s.cur!==undefined)cur=s.cur;
+  if(s.net)NET=s.net;
+  if(s.sites)SITE=s.sites;
+  save();saveNet();try{localStorage.setItem('padelSites',JSON.stringify(SITE))}catch(e){}
+  renderLoc();renderLevers();run();
+}
+function scenarioURL(){return location.origin+location.pathname+'#s='+b64e(JSON.stringify(scenario()))}
+function loadHash(){const m=location.hash.match(/[#&]s=([A-Za-z0-9_-]+)/);if(!m)return false;
+  try{applyScenario(JSON.parse(b64d(m[1])));return true}catch(e){return false}}
+$('link').addEventListener('click',async()=>{const u=scenarioURL();
+  try{history.replaceState(null,'',u)}catch(e){}
+  try{await navigator.clipboard.writeText(u);$('copied').textContent='Scenario link copied — it carries every lever.'}
+  catch(e){$('copied').textContent=u}});
+$('impGo').addEventListener('click',()=>{try{applyScenario(JSON.parse($('imp').value));$('impMsg').textContent='Loaded: levers, network plan and site list restored.'}
+  catch(e){$('impMsg').textContent='Could not read that: '+e.message}});
+
+buildCategories();renderLoc();renderLevers();makeLineCharts();loadHash();run();
 }
 </script></body></html>

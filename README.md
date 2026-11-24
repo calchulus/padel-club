@@ -12,6 +12,19 @@ A 3-court padel club simulator (Tycoonify-style), focused on Bangkok (focus 1), 
 
 Model outputs are estimates calibrated toward published benchmarks, not forecasts. Shenzhen prices and the competitor growth rates are assumptions.
 
+## How the page is organised
+
+Two accordion layers over one scroll, so the first read is a digest rather than 28 stacked topics:
+
+1. **Categories** (7) — Overview · Optimizations · Demand & pricing · Revenue & customers · Costs & capital · Growth & portfolio · Model & data. Each collapses to a numbered card carrying live figures (break-even, EBITDA, fill rates, upfront cost…). Only Overview and Optimizations start open. A sticky chip bar jumps between them.
+2. **Topics** (13) — inside a category, each section collapses to its title plus a two-line clamped summary. Charts redraw when a panel is revealed, since they measure their container.
+
+**Optimizations** is a playbook catalogue: all 23 operating modules grouped into Kids & pipeline, Members & prepaid cash, Programming & yield, B2B & brand, Automation & cost. Each card shows 3-year ΔEBITDA, setup cost, simple payback, effort and prepaid-cash delta, with a one-tap switch. Sort by value, payback, cost, effort or cash; filter to what is not yet running. ΔEBITDA and prepaid cash are simulated per module; **setup cost = modelled capex + an editorial launch estimate, and effort is editorial** — neither is a model input.
+
+**Levers** live in a rail (a collapsible drawer on mobile) with a concept search: "debt" finds *Share of upfront spend borrowed*, "staffing" finds smart access. Matching groups auto-expand.
+
+**Scenarios** round-trip in full: `overrides` in the exported archetype carries every changed lever plus the network plan and site list. "Copy scenario link" puts the same state in a `#s=` URL hash (~600 chars) that restores in a fresh browser; the import box accepts either form.
+
 ## Run locally
 
 ```sh
