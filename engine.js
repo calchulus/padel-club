@@ -24,8 +24,27 @@ const DEF = {
   acqPerCourt:22000, acqRefurb:5000, acqPlayers:180, acqBrand:25, mgmtFee:0.08, mgmtIncentive:0.2,
   courtKit:20000, roofCostCovered:30000, roofCostIndoor:55000, fitout:40000, preopen:15000, buildRentCut:0.3,
   overheadPct:0.12, academyFill:0.7, debtShare:0.4, rate:0.08, termYears:5, exitMult:4, demandScale:0.75, calib:null,
+  // ---- non-rental income plan. Prices are USD at the Bangkok reference; take-up scales by the city addon index.
+  racketOn:1, racketPrice:3, racketTake:12,
+  retailOn:1, retailSpend:0.8, retailMargin:35,
+  cafeOn:1, cafeOwn:0, cafeSpend:1.6, cafeConcession:12, cafeOwnMargin:22,
+  sponsorCardOn:1, sponsorCardValue:26000,
+  passOn:0, passPrice:60, passShare:15, passHrs:4, passCannibal:50,
+  starterPassOn:0, starterPassPrice:30, starterPassShare:10,
+  partyOn:0, parties:6, partyPrice:260, partyCost:30,
+  teamOn:0, teamDays:2, teamPrice:900, teamCost:35,
+  clipsOn:0, clipPrice:6, clipTake:3,
+  peOn:0, peSchools:2, peHours:3, peHourly:45,
+  packsOn:0, packs:40, packPrice:12, classPackOn:0, classPackDisc:10,
+  familyWalletOn:0, familyTopup:400, familyShare:20,
+  bizWalletOn:0, bizWallets:3, bizWalletValue:3000,
+  giftOn:0, gifts:20, giftValue:60,
+  referralOn:0, referralCredit:6,
+  custody:-1, sponsorRenew:80, govRentSub:0, voucherOn:0, voucherValue:8, sponsorTaxBreak:0, sportsRelief:0,
   startMoy:1, months:36
 };
+// setup cost of the non-rental modules, USD before the local cost index (mirrors AUTO)
+const NRCAPEX = {racket:1800, retail:4000, cafeOwn:18000, party:1500, team:1200, clips:0, pe:1200, packs:600, wallets:0};
 // Weekly slot grid: weekday/weekend x start hour 06..23. Open 07–23; smart access adds 06 and 23.
 const WD_BASE={6:.25,7:.5,8:.45,9:.3,10:.3,11:.3,12:.45,13:.35,14:.3,15:.35,16:.5,17:.8,18:1,19:1.1,20:1.1,21:.9,22:.6,23:.3};
 const WE_BASE={6:.3,7:.55,8:.8,9:1,10:1.1,11:1.1,12:.9,13:.85,14:.85,15:.9,16:.95,17:.95,18:.9,19:.8,20:.7,21:.55,22:.4,23:.2};
@@ -83,6 +102,10 @@ function sim(inp){
   if(p.vending) capex+=AUTO.vending.capex;
   if(p.starterOn) capex+=2000; if(p.miniOn&&p.kidsOn) capex+=1500;
   const capexAuto = capex;
+  // non-rental fit-out: racket stock, retail stock, own-run café, party kit, school-PE kit, visitor packs
+  const capexNR = ((p.racketOn?NRCAPEX.racket:0) + (p.retailOn?NRCAPEX.retail:0)
+    + (p.cafeOn&&p.cafeOwn?NRCAPEX.cafeOwn:0) + (p.partyOn?NRCAPEX.party:0) + (p.teamOn?NRCAPEX.team:0)
+    + (p.peOn?NRCAPEX.pe:0) + (p.packsOn?NRCAPEX.packs:0))*p.costIdx;
   const roofCost = p.roof==='indoor'?p.roofCostIndoor:p.roof==='covered'?p.roofCostCovered:0;
   // conversion: strip the pitch, lay a level slab + ring beam, install kits and lights; reuse roof/clubhouse where they exist
   const civilPerCourt = isConv ? (p.convStrip + (p.convSlabReuse?3500:p.convSlab) + p.convLights)*p.costIdx*(1+p.convContingency) : 0;
@@ -92,7 +115,13 @@ function sim(inp){
   const baseYear = (p.baseOpex*roof.opex + (courts-3)*p.extraCourtOpex*(courts<3?0.8:1))*p.costIdx*rentFactor;
   const deposit = baseYear/12*3;
   const fitoutCost = p.fitout*p.costIdx*(isConv?(p.convClubReuse?p.convFitout:1):isAcq?0.3:1);
-  capex = capexAuto + capexCourts + fitoutCost + p.preopen + deposit;
+  const capexGross = capexAuto + capexCourts + fitoutCost + p.preopen + deposit + capexNR;
+  // No grant in Bangkok, Shenzhen or KL pays to build a private padel club. Public money here is
+  // operating support, vouchers and tax breaks — never a reduction in the build cost.
+  capex = capexGross;
+  // Ring-fenced prepaid money is a customer liability, not funding: Shenzhen requires it by default.
+  const custody = p.custody<0 ? (L.prepaidCustody?1:0) : (p.custody?1:0);
+  const addonIdx = L.addonIdx!=null ? L.addonIdx : clamp(L.peak/50,0.6,1.3);
   const debt0 = capex*p.debtShare, equity0 = capex - debt0 + p.startCash;
   const mr = p.rate/12, nTerm = p.termYears*12;
   const pmt = debt0>0 ? (mr>0 ? debt0*mr/(1-Math.pow(1+mr,-nTerm)) : debt0/nTerm) : 0;
@@ -105,8 +134,8 @@ function sim(inp){
   let C = Math.max(0,p.startPlayers + (isAcq?p.acqPlayers:0) - found), Mm = 0, Ma = 0, K = 0, Corp = 0;
   let foundDef = found*p.foundPrice; // deferred, recognised over 12 months
   const foundMonthly = found*p.foundPrice/12;
-  let cash = p.startCash + foundDef;
-  let def = {annual:0, wallet:0, kids:0, corp:0, sponsor:0, found:foundDef};
+  let cash = p.startCash + (custody?0:foundDef);
+  let def = {annual:0, wallet:0, kids:0, corp:0, sponsor:0, found:foundDef, family:0, biz:0, gift:0};
   let sponsorDeals = 0, sponsorPaidMonth = -99;
   const out = [];
   out.push({m:0, cash, presale:found*p.foundPrice, found, capex, float:foundDef, eqCF:-equity0, debtBal});
@@ -156,8 +185,12 @@ function sim(inp){
     const socialHrs = p.socialsOn ? p.socials*WK*4 : 0; // 2 courts x 2h
     const tourHrsPeak = p.tourOn ? 16 : 0;
     const corpHrs = p.corpOn ? Corp*(4+4/3) : 0;
+    const peHrs = p.peOn ? p.peSchools*p.peHours*WK : 0; // school PE lessons take weekday daytime courts
+    const spHolders = p.starterPassOn ? C*(p.starterPassShare/100) : 0;
+    const spHrs = spHolders*4/Math.max(4,p.groupSize); // starter pass: 4 coached beginner sessions a month
+    const teamHrs = p.teamOn ? p.teamDays*2 : 0; // company team days: 2 hours each
     const players = C + Mm + Ma + found;
-    const lessonHrs = p.coachOn ? players*0.06*1.5*Math.pow(p.lessonPrice/55,-0.7) : 0;
+    const lessonHrs = p.coachOn ? players*0.06*1.5*Math.pow(p.lessonPrice/55,-0.7)*(p.classPackOn?1.12:1)*(1+p.sportsRelief/100) : 0;
     const ballHrs = p.ballMachine ? players*0.02*2 : 0;
 
     // ---- rental demand (sessions / 4 players per court hour)
@@ -171,16 +204,19 @@ function sim(inp){
     const resPk = (C*fC*peakElC + members*fM*peakElM)/4*cal*p.demandScale, resOff = (C*fC*offElC + members*fM*offElM)/4*cal*dynOff*p.demandScale;
     const tourHrs = mkt*p.tourist*0.12*Math.sqrt(share)*L.tSeason[moy-1]*(0.6+B/100)*Math.pow(p.pricePeak/rP,-0.3);
     // reservations, spread over eligible slots pro rata to free capacity
-    SL.forEach(x=>{x.kids=0;x.social=0;x.corp=0;x.coach=0;x.rent=0;x.tour=0;x.dem=0;x.starter=0;});
-    const free=x=>Math.max(0,x.cap-x.kids-x.social-x.corp-x.coach-x.starter);
+    SL.forEach(x=>{x.kids=0;x.social=0;x.corp=0;x.coach=0;x.rent=0;x.tour=0;x.dem=0;x.starter=0;x.pe=0;});
+    const free=x=>Math.max(0,x.cap-x.kids-x.social-x.corp-x.coach-x.starter-x.pe);
     const put=(hrs,f,key)=>{const el=SL.filter(x=>x.open&&f(x));const tot=el.reduce((a,x)=>a+free(x)*x.wf,0);if(!tot||hrs<=0)return;
       el.forEach(x=>{x[key]+=Math.min(free(x),hrs*free(x)*x.wf/tot)});};
     put(academyHrs,x=>x.acad,'kids'); put(starterHrs,x=>!x.pk&&!x.acad&&((x.dt==='wd'&&x.h>=10&&x.h<=13)||(x.dt==='we'&&x.h>=16&&x.h<=18)),'starter'); put(starterHrs-SL.reduce((a,x)=>a+x.starter,0),x=>!x.pk&&!x.acad,'starter'); put(campHrs,x=>x.camp,'kids'); put(socialHrs,x=>x.soc,'social');
     put(tourHrsPeak,x=>x.pk&&x.dt==='we','social');
+    put(peHrs,x=>!x.pk&&x.dt==='wd'&&x.h>=9&&x.h<=14,'pe');
+    put(spHrs,x=>!x.pk&&x.dt==='wd'&&x.h>=9&&x.h<=16,'coach');
+    put(teamHrs,x=>!x.pk&&x.dt==='we','corp');
     put(corpHrs*0.5,x=>x.pk,'corp'); put(corpHrs*0.5,x=>!x.pk,'corp');
     put(lessonHrs*0.4,x=>x.pk,'coach'); put(lessonHrs*0.6+ballHrs,x=>!x.pk,'coach');
     let peakRes=0, offRes=0, dPeak=0, dOff=0, peakServed=0, offServed=0, unmet=0, tourServed=0;
-    for(const x of SL){ const r=x.kids+x.social+x.corp+x.coach+x.starter; if(x.pk)peakRes+=r; else offRes+=r;
+    for(const x of SL){ const r=x.kids+x.social+x.corp+x.coach+x.starter+x.pe; if(x.pk)peakRes+=r; else offRes+=r;
       const dRes=(x.pk?resPk:resOff)*x.rw*x.wf, dT=tourHrs*x.tw*x.wf; x.dem=dRes+dT;
       if(x.pk)dPeak+=x.dem; else dOff+=x.dem;
       const sv=x.open?Math.min(x.dem,free(x)):0; x.rent=sv; x.tour=x.dem>0?sv*dT/x.dem:0; tourServed+=x.tour;
@@ -194,7 +230,7 @@ function sim(inp){
     const offFill = offCapAll?(offServed+offRes)/offCapAll:0;
     const scarcity = peakCap?Math.max(0, (dPeak+peakRes)/peakCap - 0.9):0;
     const touristShare = (peakServed+offServed)>0 ? tourServed/(peakServed+offServed) : 0;
-    const slots = SL.map(x=>({dt:x.dt,h:x.h,days:x.days,open:x.open,pk:x.pk,cap:x.cap,wf:x.wf,dem:x.dem,rent:x.rent,tour:x.tour,kids:x.kids,starter:x.starter,social:x.social,corp:x.corp,coach:x.coach}));
+    const slots = SL.map(x=>({dt:x.dt,h:x.h,days:x.days,open:x.open,pk:x.pk,cap:x.cap,wf:x.wf,dem:x.dem,rent:x.rent,tour:x.tour,kids:x.kids,starter:x.starter,social:x.social,corp:x.corp,coach:x.coach,pe:x.pe}));
 
     // ---- revenue
     const memHrShare = players>0 ? (members*fM)/(C*fC + members*fM)*(1-touristShare) : 0;
@@ -209,39 +245,80 @@ function sim(inp){
     rev.courtOff = courtNet - walletCost - rev.courtPeak;
     const foundRev = t<=12 ? foundMonthly : 0;
     rev.membership = Mm*memPrice + Ma*annualPrice + foundRev;
-    rev.coaching = lessonHrs*p.lessonPrice;
+    rev.coaching = lessonHrs*p.lessonPrice*(p.classPackOn?1-p.classPackDisc/100:1);
     rev.kids = K*p.kidsFee*(p.familyOn?0.95:1) + campers*150;
     rev.starter = starters*p.starterPrice;
     rev.programming = (p.socialsOn ? p.socials*WK*12*p.socialFee : 0) + (p.tourOn ? 32*p.tourFee*(0.7+B/200) : 0);
     rev.corporate = Corp*p.corpPrice/12;
     // sponsorship: deals signed once brand >= 30, renewed annually
     if(p.sponsorOn && sponsorDeals===0 && B>=30){ sponsorDeals = p.sponsorCourts; sponsorPaidMonth = t; }
+    // deals renew annually; the rate card only keeps paying if sponsors renew
+    if(sponsorDeals>0 && t>sponsorPaidMonth && (t-sponsorPaidMonth)%12===0){ sponsorDeals *= p.sponsorRenew/100; sponsorPaidMonth = t; }
     const sponsorValue = p.sponsorPrice*(0.6+B/100);
     rev.sponsorship = sponsorDeals*sponsorValue/12 + (p.tourOn && B>=30 ? 400*B/50 : 0);
     const sessions = (peakServed+offServed)*4;
     const visitsTour = tourServed*4;
-    const visits = sessions + starters + K*p.kidsPerWeek*WK + campers*10 + (p.socialsOn?p.socials*WK*12:0);
+    const visits = sessions + starters + K*p.kidsPerWeek*WK + campers*10 + (p.socialsOn?p.socials*WK*12:0)
+                 + peHrs*8 + (p.partyOn?p.parties*12:0);
+    // ---- non-rental income. Every stream is driven by traffic the model already produces,
+    // not by a fixed estimate: visits, sessions, members, casual players and brand.
+    const nr = {};
+    nr.racket = p.racketOn ? visits*(p.racketTake/100)*p.racketPrice*addonIdx : 0;
+    nr.retail = p.retailOn ? visits*p.retailSpend*addonIdx : 0;
+    nr.cafe = p.cafeOn ? visits*p.cafeSpend*addonIdx*(p.cafeOwn?1:p.cafeConcession/100) : 0;
+    nr.sponsorCard = (p.sponsorCardOn && sponsorDeals>0) ? p.sponsorCardValue*addonIdx*(0.6+B/100)/12*(1+p.sponsorTaxBreak/100) : 0;
+    nr.parties = p.partyOn ? p.parties*p.partyPrice : 0;
+    nr.team = p.teamOn ? p.teamDays*p.teamPrice : 0;
+    nr.clips = (p.clipsOn && p.replay) ? sessions*(p.clipTake/100)*p.clipPrice*addonIdx : 0;
+    nr.pe = p.peOn ? peHrs*p.peHourly : 0;
+    nr.packs = p.packsOn ? p.packs*p.packPrice*(0.3+L.tourist*2)*addonIdx : 0;
+    nr.vouchers = p.voucherOn ? starters*p.voucherValue : 0; // district sports vouchers: the state pays the first-visit discount
+    const passHolders = p.passOn ? members*(p.passShare/100) : 0;
+    nr.pass = passHolders*p.passPrice;
+    // pass holders play off-peak for free: the fuller off-peak already is, the more of them
+    // displace a booking that would have been paid for. Empty courts cost nothing to give away.
+    const passCannib = clamp(p.passCannibal/100 + offFill*0.3, 0, 1);
+    const passDisplaced = Math.min(rev.courtOff, passHolders*(p.passHrs/4)*p.priceOff*passCannib);
+    rev.courtOff -= passDisplaced;
+    nr.starterPass = spHolders*p.starterPassPrice;
+    nr.biz = p.bizWalletOn ? p.bizWallets*p.bizWalletValue/12 : 0;
+    nr.gift = p.giftOn ? p.gifts*p.giftValue*0.85 : 0;
+    const famBal = p.familyWalletOn ? members*(p.familyShare/100)*p.familyTopup : 0;
+    const bizBal = p.bizWalletOn ? p.bizWallets*p.bizWalletValue*0.5 : 0;
+    const giftBal = p.giftOn ? p.gifts*p.giftValue*0.3 : 0;
+    rev.sponsorship += nr.sponsorCard;
+    rev.starter += nr.starterPass + nr.vouchers;
+    rev.addons = nr.racket + nr.retail + nr.cafe;
+    rev.events = nr.parties + nr.team + nr.clips + nr.packs;
+    rev.pass = nr.pass;
+    rev.schoolPE = nr.pe;
+    rev.prepaid = nr.biz + nr.gift;
     rev.automation = (p.replay ? sessions/4*0.18*6 : 0) + (p.ballMachine ? ballHrs*(p.priceOff+10) : 0)
                    + (p.vending ? visits*0.5 : 0) + tourServed*4*3;
-    rev.breakage = breakageRev;
+    rev.breakage = breakageRev + (famBal+bizBal+giftBal)*(p.breakage/100)/12;
     const revenue = Object.values(rev).reduce((a,b)=>a+b,0);
 
     // ---- costs
     const cost = {};
-    cost.base = baseYear/12 - (p.smartAccess?AUTO.smartAccess.save:0);
+    cost.base = baseYear/12 - (p.smartAccess?AUTO.smartAccess.save:0) - (t<=24 ? baseYear/12*(p.govRentSub/100) : 0);
+    // goods sold, café run in-house, party delivery, racket wear, visitor-pack contents
+    cost.addons = nr.retail*(1-p.retailMargin/100) + (p.cafeOn&&p.cafeOwn ? nr.cafe*(1-p.cafeOwnMargin/100) : 0)
+                + nr.racket*0.25 + nr.parties*(p.partyCost/100) + nr.team*(p.teamCost/100) + nr.packs*0.45 + nr.clips*0.1;
     cost.owner = isConv && p.convRevshare ? (rev.courtPeak+rev.courtOff+rev.membership+rev.breakage)*p.ownerShare : 0;
     const usedHrs = peakServed+offServed+peakRes+offRes;
     cost.variable = usedHrs*p.varHr*Math.sqrt(p.costIdx) + revenue*0.025;
     cost.climate = p.roof==='indoor' ? usedHrs*(0.8+0.25*Math.max(0,T-24))*Math.sqrt(p.costIdx) : 0;
     cost.coaches = lessonHrs*p.lessonPrice*0.55 + academyHrs*p.coachHr + starterHrs*p.coachHr*1.2 + campers*150*0.35
-                 + (p.socialsOn?p.socials*WK*40:0) + (p.tourOn?600:0) + (p.corpOn?Corp*20:0);
+                 + (p.socialsOn?p.socials*WK*40:0) + (p.tourOn?600:0) + (p.corpOn?Corp*20:0) + peHrs*p.coachHr + spHrs*p.coachHr;
     cost.growth = p.mkt + (p.contentOn?p.content:0) + (p.corpOn?p.corpBD:0) + (p.kidsOn?p.schools*p.schoolCost:0)
-                + (p.proEvent && t===p.proMonth ? 5000 : 0);
+                + (p.proEvent && t===p.proMonth ? 5000 : 0)
+                + (p.referralOn ? (out[t-1].newPlayers||0)*p.referralCredit*2 : 0); // credit to both sides, paid in credit not cash
     cost.automation = (p.smartAccess?AUTO.smartAccess.mo:0)+(p.dynPricing?AUTO.dynPricing.mo:0)
                     +(p.replay?AUTO.replay.moCourt*courts:0)+(p.ballMachine?AUTO.ballMachine.mo:0)+(p.vending?AUTO.vending.mo+visits*0.5*0.55:0);
     const progs = (p.kidsOn?1:0)+(p.socialsOn?1:0)+(p.tourOn?1:0)+(p.corpOn?1:0)+(p.coachOn?1:0);
     cost.staff = (progs>=2?2500:0) + (progs>=4?2500:0) + (players>600?(p.smartAccess?900:1800):0) + (players>1200?(p.smartAccess?900:1800):0);
     cost.staff += revenue*p.overheadPct; // management, cleaning, maintenance, insurance that grow with the business
+    cost.staff += (p.cafeOn&&p.cafeOwn ? 1400*Math.sqrt(p.costIdx) : 0) + (p.partyOn ? 300*Math.sqrt(p.costIdx) : 0);
     const moving = p.moveEvery>0 && t%p.moveEvery===0 && t<N;
     cost.move = moving ? revenue*Math.min(1,p.moveDown/WK)*0.8 : 0; // trading lost while courts come down and go up again
     const moveCapex = moving ? courts*(p.moveTeardown+p.moveBase+p.moveReinstall+(p.convHasRoof?0:p.moveRoof))*p.costIdx + courts*p.courtKit*p.moveKitLoss + p.moveClub*p.costIdx : 0;
@@ -256,9 +333,12 @@ function sim(inp){
     def.kids = p.kidsPrepay ? K*p.kidsFee*1.5 : 0;
     def.corp = Corp*p.corpPrice/2;
     def.sponsor = sponsorDeals ? sponsorDeals*sponsorValue*(12-((t-sponsorPaidMonth)%12))/12 : 0;
+    def.family = famBal; def.biz = bizBal; def.gift = giftBal;
     let dDef = 0; for(const k in def) dDef += def[k]-prev[k];
     const float = Object.values(def).reduce((a,b)=>a+b,0);
-    const cf = ebitda + dDef - moveCapex;
+    // ring-fenced float still exists as a liability but cannot be spent on the build or the running costs
+    const freeFloat = custody ? 0 : float;
+    const cf = ebitda + (custody?0:dDef) - moveCapex;
     let ds = 0; if(debtBal>0.01 && t<=nTerm){ const intr = debtBal*mr; ds = Math.min(pmt, debtBal+intr); debtBal = debtBal + intr - ds; }
     if(ds>0) minDSCR = Math.min(minDSCR, ebitda/ds);
     const eqCF = cf - ds;
@@ -268,7 +348,8 @@ function sim(inp){
     const newPlayersPrevGuess = out[t-1].newPlayers||0;
     A = A*0.98 + (p.contentOn?p.content*0.6:0) + (p.replay?sessions/4*0.18*0.3:0)
       + (p.tourOn?250:0) + (p.socialsOn?p.socials*WK*3:0) + K*0.2 + newPlayersPrevGuess*0.3
-      + (p.proEvent && t===p.proMonth ? 3000 : 0) + (p.sponsorOn&&sponsorDeals?60:0) + visitsTour*0.3 + starters*0.5;
+      + (p.proEvent && t===p.proMonth ? 3000 : 0) + (p.sponsorOn&&sponsorDeals?60:0) + visitsTour*0.3 + starters*0.5
+      + (p.partyOn?p.parties*8:0) + (p.giftOn?p.gifts*1.5:0);
     const Btarget = clamp(8 + 9*Math.log(1+A/800) + (p.tourOn?6:0) + (p.kidsOn?Math.min(10,K/15):0)
       + (p.socialsOn?4:0) + (p.proEvent && t>=p.proMonth && t<p.proMonth+6 ? 8 : 0) - scarcity*40, 0, 100);
     B += 0.15*(Btarget-B);
@@ -279,11 +360,13 @@ function sim(inp){
             + (p.socialsOn?p.socials*WK*2*0.3:0) + newKids*(p.familyOn?0.45:0.25) + campers*0.08
             + (p.corpOn?Corp/3*16*0.08:0) + (p.tourOn?3:0) + visitsTour*0.01 + (isConv?p.footfall*0.01:0);
     if(comp) acq *= 0.85;
+    if(p.referralOn) acq *= 1.08; // a friend brought by a friend, paid in credit
+    if(p.voucherOn) acq *= 1.05; // the state pays the first-visit discount
     const newPlayers = Math.max(0, acq*sat*season);
     // corporate
     if(p.corpOn){ Corp = Corp*(1-0.024) + p.corpBD/1500*(1+B/150)*Math.pow(p.corpPrice/4800,-0.8)*(0.4+p.office); Corp=Math.min(Corp, 25); }
     const extraChurn = (comp?0.015:0) + scarcity*0.3;
-    const churnC = 0.07+extraChurn-walletShare*0.02, churnMm = 0.03+extraChurn*0.6, churnMa = 0.012+extraChurn*0.3;
+    const churnC = 0.07+extraChurn-walletShare*0.02, churnMm = 0.03+extraChurn*0.6-(p.passOn?0.004:0)-(p.familyWalletOn?0.003:0), churnMa = 0.012+extraChurn*0.3;
     // membership conversion
     let conv = 0;
     if(memOn){
@@ -300,7 +383,8 @@ function sim(inp){
     Mm = Mm*(1-churnMm) + toMem*(1-annualShare) + foundRenew*(1-annualShare);
     Ma = Ma*(1-churnMa) + toMem*annualShare + foundRenew*annualShare;
 
-    out.push({m:t, rev, revenue, cost, opex, ebitda, cash, cf, float, def:Object.assign({},def),
+    out.push({m:t, rev, revenue, cost, opex, ebitda, cash, cf, float, freeFloat, def:Object.assign({},def),
+      nr, visits, sessions, passHolders, peHrs, passDisplaced,
       players, C, members, K, waitlist, newKids, Corp, A, B, newPlayers,
       peakFill, offFill, peakServed, offServed, peakCap, offCapAll, academyHrs, campHrs, socialHrs, corpHrs, lessonHrs, ballHrs, tourHrsPeak, unmet,
       sponsorDeals, campers, ext, moveCapex, memHrShare, slots, starters, starterNew, starterHrs, share, compCourts, latentLeft, resMarket, T, rd, wfAll, tourServed, touristShare, dPeak, dOff, moy, ds, eqCF, debtBal});
@@ -325,8 +409,34 @@ function sim(inp){
   const dscrY = [1,2,3].filter(y=>y*12<=N).map(y=>{const sl=ms.filter(o=>o.m>(y-1)*12&&o.m<=y*12);const d=sl.reduce((a,o)=>a+o.ds,0);return d>0?sl.reduce((a,o)=>a+o.ebitda,0)/d:null;});
   let cumEq = 0, payback = null; for(let i=0;i<=N;i++){ cumEq += out[i].eqCF; if(i>0 && cumEq>=0 && payback===null) payback = i; }
   const moveCapexTotal = out.reduce((a,o)=>a+(o.moveCapex||0),0);
-  const fin = {moveCapexTotal, capex, capexCourts, capexCivil, fitout:fitoutCost, mode:p.capexMode, capexAuto, preopen:p.preopen, deposit, debt0, equity0, pmt, minDSCR: isFinite(minDSCR)?minDSCR:null, payback, eqIRR: irr(eqFlows), eqIRRnoExit: irr(eqNoExit), dscrY, projIRR: irr(projFlows), exitEV, debtEnd: debtBal, last12};
-  return {p, out, years, breakEven:be, minCash, cumEbitda:cum, capex, peakFloat, presale: out[0].presale, maxKids, fin};
+  const fin = {moveCapexTotal, capex, capexCourts, capexCivil, fitout:fitoutCost, mode:p.capexMode, capexAuto, capexNR, capexGross, preopen:p.preopen, deposit, debt0, equity0, pmt, minDSCR: isFinite(minDSCR)?minDSCR:null, payback, eqIRR: irr(eqFlows), eqIRRnoExit: irr(eqNoExit), dscrY, projIRR: irr(projFlows), exitEV, debtEnd: debtBal, last12};
+  // ---- non-rental detail by year, and the plan's scorecard measured at month 24
+  const nrYears = [1,2,3].filter(y=>y*12<=N).map(y=>{
+    const s = ms.filter(o=>o.m>(y-1)*12 && o.m<=y*12), r={};
+    for(const k in s[0].nr) r[k]=s.reduce((a,o)=>a+o.nr[k],0);
+    r.displaced = s.reduce((a,o)=>a+o.passDisplaced,0);
+    r.goods = s.reduce((a,o)=>a+o.cost.addons,0);
+    return r; });
+  // ---- the plan's own scorecard (Non-Rental Income Plan, "Checks before launch").
+  // src:'model' = a simulated output; src:'input' = an assumption the plan sets, shown so it can be checked.
+  const kM = out[Math.min(24,N)] || out[out.length-1], k12 = out[Math.min(12,N)] || kM;
+  const rentalM = (kM.rev.courtPeak||0)+(kM.rev.courtOff||0);
+  const addonPerVisit = kM.visits>0 ? (kM.nr.racket+kM.nr.retail+kM.nr.cafe+kM.nr.clips)/kM.visits : 0;
+  const spendTarget = (L.spendTarget||120)/(L.fx||33); // ฿120 / ¥25 / RM15 per visit, in local money
+  const kpis = [
+    {id:'nrShare', label:'Non-rental share of revenue', v:kM.revenue>0?(kM.revenue-rentalM)/kM.revenue:0, target:0.55, fmt:'pct', src:'model'},
+    {id:'memShare', label:'Members as a share of regular players', v:kM.players>0?kM.members/kM.players:0, target:0.30, fmt:'pct', src:'model'},
+    {id:'annual', label:'Members paying yearly', v:memOn?p.annualShare/100:0, target:0.40, fmt:'pct', src:'input'},
+    {id:'wallet', label:'Court revenue paid from wallets', v:walletShare, target:0.30, fmt:'pct', src:'model'},
+    {id:'float12', label:"Customers' money held, month 12", v:k12.float, target:80000, fmt:'usd', src:'model'},
+    {id:'spend', label:'Non-court spend per visit', v:addonPerVisit, target:spendTarget, fmt:'usd2', local:(L.ccy||'')+(L.spendTarget||120), src:'model'},
+    {id:'breakage', label:'Credit never used', v:p.breakage/100, target:0.03, max:0.08, fmt:'pct', band:true, src:'input'},
+    {id:'renew', label:'Sponsor renewals', v:p.sponsorRenew/100, target:0.80, fmt:'pct', src:'input'}
+  ];
+  kpis.forEach(k=>{k.pass = k.band ? (k.v>=k.target && k.v<=k.max) : k.v>=k.target; k.gap = k.target>0?k.v/k.target:0;});
+  return {p, out, years, nrYears, kpis, breakEven:be, minCash, cumEbitda:cum, capex, peakFloat,
+    peakFreeFloat: Math.max(...out.map(o=>o.freeFloat||0)), custody, addonIdx,
+    presale: out[0].presale, maxKids, fin};
 }
 
 // ---------- site types for conversions (per-court USD before the local cost index) ----------

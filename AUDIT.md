@@ -7,6 +7,15 @@
 > 1,583 ms → 1 ms and a full render 26 sims/63 ms → 2 sims/15 ms; scenario link and export/import
 > round-trip in a fresh browser; 8 presets + 30 city/roof combos clean; 0 console errors.
 > Mobile scroll length 20,329 px → 7,401 px. P3 items (9–15) remain open.
+>
+> **Update, 2026-11-25 — non-rental income plan integrated.** 16 revenue streams (was 11), 41 catalogue
+> modules (was 23), 178 levers (was 133), 9 presets (was 8), plus the plan's eight launch checks.
+> Re-verified after the change: 9 presets and 10 cities × 3 roofs clean (no NaN/Infinity/undefined in
+> rendered text); all 18 new module toggles clean; 45 levers round-trip through export/import and a
+> 955-char `#s=` URL in a fresh browser; 41-step slider drag 21 ms / 4 sims; 0 page errors;
+> no horizontal overflow at 390 px. **The open-items list now lives in `IMPROVEMENTS.md`**, which
+> supersedes the P3 list below and adds the gaps this work exposed (no committed tests, preset JSON
+> drift, city-invariant volume streams, unenforced compliance caps).
 
 Black-box tested against the live site https://calchulus.github.io/padel-club/ with headless Chromium (Playwright), driving the real UI.
 

@@ -9,6 +9,9 @@ A 3-court padel club simulator (Tycoonify-style), focused on Bangkok (focus 1), 
 | `locations.js` | City profiles (prices, climate normals, office/visitor traffic, competition) and sample candidate sites |
 | `page.html` + `build.py` | Page source; `python3 build.py` inlines `locations.js` and `engine.js` into `padel-club-tycoon.html` |
 | `bangkok_accessible_family_club.json` | Archetype export in the Tycoonify preset schema (`schema_version` 1.1.0, type B) with a `location` block |
+| `NON-RENTAL-PLAN.md` | The Non-Rental Income Plan mapped into the model: every stream, its levers, its formula, and measured output against the plan's own estimate |
+| `IMPROVEMENTS.md` | Open work, ordered by value |
+| `AUDIT.md` | Evidence-backed test audit (P1/P2 fixed and verified) |
 
 Model outputs are estimates calibrated toward published benchmarks, not forecasts. Shenzhen prices and the competitor growth rates are assumptions.
 
@@ -17,13 +20,15 @@ Model outputs are estimates calibrated toward published benchmarks, not forecast
 Two accordion layers over one scroll, so the first read is a digest rather than 28 stacked topics:
 
 1. **Categories** (7) — Overview · Optimizations · Demand & pricing · Revenue & customers · Costs & capital · Growth & portfolio · Model & data. Each collapses to a numbered card carrying live figures (break-even, EBITDA, fill rates, upfront cost…). Only Overview and Optimizations start open. A sticky chip bar jumps between them.
-2. **Topics** (13) — inside a category, each section collapses to its title plus a two-line clamped summary. Charts redraw when a panel is revealed, since they measure their container.
+2. **Topics** (14) — inside a category, each section collapses to its title plus a two-line clamped summary. Charts redraw when a panel is revealed, since they measure their container.
 
-**Optimizations** is a playbook catalogue: all 23 operating modules grouped into Kids & pipeline, Members & prepaid cash, Programming & yield, B2B & brand, Automation & cost. Each card shows 3-year ΔEBITDA, setup cost, simple payback, effort and prepaid-cash delta, with a one-tap switch. Sort by value, payback, cost, effort or cash; filter to what is not yet running. ΔEBITDA and prepaid cash are simulated per module; **setup cost = modelled capex + an editorial launch estimate, and effort is editorial** — neither is a model input.
+**Optimizations** is a playbook catalogue: all 41 operating modules grouped into Kids & pipeline, Members & prepaid cash, Programming & yield, B2B & brand, Shop & hospitality, Automation & cost. Each card shows 3-year ΔEBITDA, setup cost, simple payback, effort and prepaid-cash delta, with a one-tap switch. Sort by value, payback, cost, effort or cash; filter to what is not yet running. ΔEBITDA and prepaid cash are simulated per module; **setup cost = modelled capex + an editorial launch estimate, and effort is editorial** — neither is a model input.
 
 **Levers** live in a rail (a collapsible drawer on mobile) with a concept search: "debt" finds *Share of upfront spend borrowed*, "staffing" finds smart access. Matching groups auto-expand.
 
-**Scenarios** round-trip in full: `overrides` in the exported archetype carries every changed lever plus the network plan and site list. "Copy scenario link" puts the same state in a `#s=` URL hash (~600 chars) that restores in a fresh browser; the import box accepts either form.
+**Non-rental income** has its own section under Revenue & customers: the plan's eight launch checks (each marked as a simulated output or an assumption), a per-stream year-1/2/3 table, and the measured Δ EBITDA against every stream switched off. Racket hire, pro shop, café concession and the sponsor rate card default on; passes, parties, team days, school PE, own-run café and the prepaid products default off. The `Non-rental income plan` preset switches the whole playbook on. See `NON-RENTAL-PLAN.md`.
+
+**Scenarios** round-trip in full: `overrides` in the exported archetype carries every changed lever plus the network plan and site list. "Copy scenario link" puts the same state in a `#s=` URL hash (~950 chars) that restores in a fresh browser; the import box accepts either form.
 
 ## Run locally
 

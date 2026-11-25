@@ -1,7 +1,7 @@
 // City profiles. Prices are USD per court-hour (local in brackets for display). Climate: monthly mean daily high (°C) and rain days (>=1mm), long-run normals, approximate.
 // office: 0–1 how hard weekday demand bunches after work; tourist: 0–1 visitor share of the market; tSeason: monthly visitor index; cal: monthly resident-demand index (holidays, exodus).
 const LOCS = {
- shenzhen:{playRate:0.0004, start:80, tier:2, city:'Shenzhen', country:'China', ccy:'¥', fx:7.1, peak:42, off:26, est:true, market:700, latent:25000, comp:5, prox:0.6, compGrowth:0.6, mktGrowth:0.035, costIdx:1.0, office:0.9, tourist:0.05, roof:'covered',
+ shenzhen:{playRate:0.0004, start:80, tier:2, city:'Shenzhen', country:'China', ccy:'¥', fx:7.1, peak:42, off:26, est:true, market:700, latent:25000, comp:5, prox:0.6, compGrowth:0.6, mktGrowth:0.035, costIdx:1.0, office:0.9, tourist:0.05, addonIdx:0.9,spendTarget:25,  prepaidCustody:1, roof:'covered',
    peakWd:[[18,22]], peakWe:[[9,20]],
    hi:[20,21,24,27,30,32,33,33,32,29,25,21], rain:[4,6,8,10,14,18,17,18,14,5,3,3],
    tSeason:[1,1.2,1,1,1.1,1,1,1,1,1.2,1,1], cal:[1,0.65,1,1,0.95,1,1,1,1,0.9,1,1],
@@ -16,7 +16,7 @@ const LOCS = {
    hi:[19,19,22,25,29,31,32,32,31,28,24,20], rain:[5,8,10,12,15,19,17,17,14,7,5,4],
    tSeason:[1.1,1.1,1,1.1,1,0.9,1,1,0.9,1.1,1.1,1.2], cal:[1,0.85,1,0.95,1,1,1,1,1,0.95,1,0.9],
    note:'Premium prices on rooftop and plaza sites; rent dominates cost. Office crowd plays straight after work.'},
- bangkok:{playRate:0.003, start:220, tier:1, city:'Bangkok', country:'Thailand', ccy:'฿', fx:33, peak:50, off:34, market:9000, latent:15000, comp:70, prox:0.35, compGrowth:0.25, mktGrowth:0.015, costIdx:0.7, office:0.6, tourist:0.25, roof:'covered',
+ bangkok:{playRate:0.003, start:220, tier:1, city:'Bangkok', country:'Thailand', ccy:'฿', fx:33, peak:50, off:34, market:9000, latent:15000, comp:70, prox:0.35, compGrowth:0.25, mktGrowth:0.015, costIdx:0.7, office:0.6, tourist:0.25, addonIdx:1,spendTarget:120,  roof:'covered',
    peakWd:[[17,22]], peakWe:[[7,10],[16,22]],
    hi:[32,33,34,35,34,33,33,32,32,32,32,31], rain:[2,3,4,6,15,17,19,21,22,16,6,1],
    tSeason:[1.3,1.2,1.1,1,0.8,0.8,0.9,0.9,0.8,0.9,1.1,1.3], cal:[1,1,1,0.85,1,1,1,1,1,1,1,0.95],
@@ -26,7 +26,7 @@ const LOCS = {
    hi:[32,33,33,33,32,31,31,31,30,30,31,31], rain:[4,3,6,13,21,20,20,21,24,22,14,6],
    tSeason:[1.4,1.4,1.3,1.1,0.6,0.6,0.7,0.7,0.5,0.6,1,1.4], cal:[1,1,1,0.9,1,1,1,1,1,1,1,1],
    note:'Visitor-driven: November–April high season fills mornings and late afternoons; the wet season halves the crowd.'},
- kualalumpur:{playRate:0.003, start:160, tier:3, city:'Kuala Lumpur', country:'Malaysia', ccy:'RM', fx:4.2, peak:40, off:29, market:6000, latent:12000, comp:50, prox:0.4, compGrowth:0.3, mktGrowth:0.02, costIdx:0.65, office:0.75, tourist:0.1, roof:'covered',
+ kualalumpur:{playRate:0.003, start:160, tier:3, city:'Kuala Lumpur', country:'Malaysia', ccy:'RM', fx:4.2, peak:40, off:29, market:6000, latent:12000, comp:50, prox:0.4, compGrowth:0.3, mktGrowth:0.02, costIdx:0.65, office:0.75, tourist:0.1, addonIdx:0.8,spendTarget:15,  roof:'covered',
    peakWd:[[17,23]], peakWe:[[8,22]],
    hi:[32,33,33,33,33,33,32,32,32,32,32,32], rain:[12,13,16,19,15,10,10,12,15,19,22,18],
    tSeason:[1,1,1,1,1,1,1.1,1.1,1,1,1,1.1], cal:[1,0.9,1,1,1,1,1,1,1,1,1,0.95],

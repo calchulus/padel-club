@@ -24,6 +24,9 @@ h1{font-size:clamp(30px,4.2vw,48px)}h2{font-size:clamp(22px,2.4vw,28px);margin-b
 .kpi{background:rgba(255,255,255,.08);border-radius:10px;padding:12px 14px}
 .kpi b{display:block;font-size:clamp(20px,2.2vw,28px);font-weight:800;white-space:nowrap}
 .kpi span{font-size:13px;color:#c9d8f6}
+.kpis.nr{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi .tgt{display:block;font-size:12px;color:#9fb6e4;margin-top:3px}
+.kpi.hit b{color:#7ee2a8}.kpi.miss b{color:#ffd479}
 .locbar{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:flex-start;margin-top:20px}
 .cities{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 520px}.roofs{display:flex;gap:6px;flex-wrap:wrap}
 .hero button{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.22);text-align:left;line-height:1.15}
@@ -84,9 +87,9 @@ tr.tot td{font-weight:800;border-top:2px solid var(--ink)}
 textarea{width:100%;min-height:220px;font:13px/1.45 ui-monospace,Menlo,monospace;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:12px}
 pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
 .small{font-size:13px;color:var(--mut)}
-@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpis.nr{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}.two{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:600px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.bars .r{grid-template-columns:110px minmax(0,1fr) 78px;font-size:13px}table{font-size:13px}#sheetFig{min-height:300px}}
+@media(max-width:600px){.kpis,.kpis.nr{grid-template-columns:repeat(2,minmax(0,1fr))}.bars .r{grid-template-columns:110px minmax(0,1fr) 78px;font-size:13px}table{font-size:13px}#sheetFig{min-height:300px}}
 @media(prefers-reduced-motion:no-preference){.bars .t i{transition:width .35s ease}}
 
 /* ---- categories: one scroll, each topic group collapses to a digest line ---- */
@@ -212,6 +215,12 @@ pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
     <div class="legend" id="revLegend" style="color:var(--mut)"></div>
     <div class="fig"><svg id="revChart" role="img" aria-label="Stacked monthly revenue by stream with opex line"></svg></div></section>
 
+  <section class="blk"><h2>Non-rental income plan</h2>
+    <p class="lede" id="nrLede"></p>
+    <div id="nrKpis" class="kpis nr"></div>
+    <div class="scroll"><table id="nrTable"></table></div>
+    <p class="small" id="nrNote"></p></section>
+
   <section class="blk"><h2>Ways to improve the operation</h2>
     <p class="lede">Every module re-run over the 36 months with it switched off — or on, if it is off now — grouped by what part of the business it touches. Δ EBITDA and prepaid cash come from the model. Setup cost and effort are editorial estimates, not model inputs.</p>
     <div class="optbar">
@@ -287,14 +296,17 @@ const $=id=>document.getElementById(id);
 const f$=v=>{if(v==null||isNaN(v))return'—';const a=Math.abs(v),s=v<0?'−':'';return a>=1e6?s+'$'+(a/1e6).toFixed(2)+'M':a>=1e4?s+'$'+Math.round(a/1e3)+'k':a>=1e3?s+'$'+(a/1e3).toFixed(1)+'k':s+'$'+Math.round(a)};
 const fn=v=>Math.round(v).toLocaleString('en-US');
 const pct=v=>Math.round(v*100)+'%';
-const STREAMS=[['courtPeak','Peak rentals','#1f56b8'],['starter','Taster sessions','#38b26a'],['courtOff','Off-peak rentals','#7da6ea'],['membership','Memberships','#ff8fb0'],['kids','Kids academy & camps','#dcef3c'],['coaching','Adult coaching','#17a196'],['programming','Socials & tournaments','#f2694d'],['corporate','Corporate packages','#8b6bd9'],['sponsorship','Sponsorship','#c79a2b'],['automation','Automated services','#a7b4cc'],['breakage','Wallet breakage','#5b6b8a']];
+const STREAMS=[['courtPeak','Peak rentals','#1f56b8'],['starter','Taster sessions','#38b26a'],['courtOff','Off-peak rentals','#7da6ea'],['membership','Memberships','#ff8fb0'],['kids','Kids academy & camps','#dcef3c'],['coaching','Adult coaching','#17a196'],['programming','Socials & tournaments','#f2694d'],['corporate','Corporate packages','#8b6bd9'],['sponsorship','Sponsorship','#c79a2b'],['addons','Shop, café & hire','#e0762f'],['events','Parties, clips & packs','#4fb3a5'],['pass','Off-peak passes','#9c7b4f'],['schoolPE','School PE contracts','#6fa84f'],['prepaid','Prepaid products','#b06a9a'],['automation','Automated services','#a7b4cc'],['breakage','Wallet breakage','#5b6b8a']];
 const L=[ // group, id, label, min, max, step, unit
  ['Courts & demand',[['courts','Courts',2,8,1,''],['baseOpex','Base running cost / yr (3 courts)',50000,200000,5000,'$'],['pricePeak','Peak price / court-hour',20,90,1,'$'],['priceOff','Off-peak price / court-hour',10,70,1,'$'],['market','Padel players in the city you can reach today',100,15000,100,''],['latent','New-to-padel people you can reach (families, office workers)',0,60000,1000,''],['comp','Competing courts in the city today',0,200,1,''],['compGrowth','Competitor court growth / yr',0,1.5,0.05,'f%'],['mktGrowth','Player base growth / month',0,0.08,0.005,'f%1'],['costIdx','Local cost index (× base)',0.4,3,0.05,'x'],['office','Office-worker intensity',0,1,0.05,'f%'],['tourist','Visitor share of players',0,0.9,0.05,'f%'],['mkt','Paid marketing / mo',0,3000,100,'$'],['startCash','Starting cash',0,200000,5000,'$'],['competitor','Competitor opens in month 15']]],
  ['Entry-level & family padel',[['starterOn','First Rally taster sessions (coach, loaner kit)'],['starterPerWeek','Taster sessions / week',1,20,1,''],['starterPrice','Taster price / person',3,30,1,'$'],['starterSize','Players per taster court',4,8,1,''],['starterConv','Tasters who become regulars',5,50,1,'%'],['miniOn','Mini-padel: split courts for under-8s'],['familyOn','Family plans (parent + child bundle)']]],
  ['Memberships & prepayment',[['memOn','Memberships'],['memFee','Membership / mo',15,120,1,'$'],['memDisc','Member court discount',0,40,1,'%'],['annualShare','Members paying annually upfront',0,80,5,'%'],['annualDisc','Annual upfront discount',0,30,1,'%'],['foundOn','Founding-member presale'],['foundSeats','Founding seats offered',20,300,10,''],['foundPrice','Founding price / yr',150,900,10,'$'],['walletOn','Prepaid credit wallets'],['walletBonus','Top-up bonus',0,20,1,'%'],['breakage','Unused credit (breakage)',0,15,1,'%']]],
  ['Kids & schools',[['kidsOn','Junior academy'],['kidsFee','Academy fee / child / mo',40,200,5,'$'],['kidsPerWeek','Sessions / child / week',1,3,1,''],['groupSize','Kids per court',4,8,1,''],['schools','School partnerships',0,10,1,''],['campsOn','Holiday camps (Apr, Jul, Aug, Dec)'],['kidsPrepay','Academy paid per term upfront']]],
  ['Programming',[['coachOn','Adult coaching'],['lessonPrice','Lesson / hour',30,110,5,'$'],['socialsOn','Americanas & socials'],['socials','Socials / week',1,7,1,''],['socialFee','Social fee / player',5,35,1,'$'],['tourOn','Monthly tournament'],['tourFee','Entry fee / player',10,80,5,'$']]],
- ['B2B, brand & audience',[['corpOn','Corporate packages'],['corpBD','Corporate sales spend / mo',0,3000,100,'$'],['corpPrice','Package / company / yr',1200,15000,200,'$'],['sponsorOn','Court naming sponsors'],['sponsorCourts','Courts sponsored',1,6,1,''],['sponsorPrice','List price / court / yr',1000,25000,500,'$'],['contentOn','Content & social'],['content','Content spend / mo',0,3000,100,'$'],['proEvent','Pro exhibition (month 4, $5k)']]],
+ ['B2B, brand & audience',[['corpOn','Corporate packages'],['corpBD','Corporate sales spend / mo',0,3000,100,'$'],['corpPrice','Package / company / yr',1200,15000,200,'$'],['sponsorOn','Court naming sponsors'],['sponsorCourts','Courts sponsored',1,6,1,''],['sponsorPrice','List price / court / yr',1000,25000,500,'$'],['sponsorCardOn','Full sponsor rate card (academy, kit, drinks, league)'],['sponsorCardValue','Rate-card value beyond court naming / yr',0,80000,1000,'$'],['contentOn','Content & social'],['content','Content spend / mo',0,3000,100,'$'],['proEvent','Pro exhibition (month 4, $5k)']]],
+ ['Shop, café & hire',[['racketOn','Racket hire'],['racketPrice','Racket hire / session',1,10,0.5,'$'],['racketTake','Visits that hire a racket',0,40,1,'%'],['retailOn','Pro shop: balls, grips, socks, tape'],['retailSpend','Retail spend / visit',0,4,0.1,'$'],['retailMargin','Retail gross margin',10,60,1,'%'],['cafeOn','Café & drinks'],['cafeOwn','Run the café ourselves (instead of a concession)'],['cafeSpend','Café spend / visit',0,6,0.2,'$'],['cafeConcession','Concession fee (share of takings)',5,30,1,'%'],['cafeOwnMargin','Own-run café gross margin',10,45,1,'%']]],
+ ['Passes, events & contracts',[['starterPassOn','Starter pass: 4 coached beginner sessions a month'],['starterPassPrice','Starter pass / mo',10,80,5,'$'],['starterPassShare','Casual players on a starter pass',0,40,5,'%'],['passOn','Off-peak unlimited pass'],['passPrice','Off-peak pass / mo',20,150,5,'$'],['passShare','Members who take the pass',0,60,5,'%'],['passHrs','Off-peak sessions a pass holder plays / mo',1,12,1,''],['passCannibal','Base share of those that displace a paid booking',0,100,5,'%'],['partyOn','Birthday parties'],['parties','Parties / month',0,30,1,''],['partyPrice','Price / party',80,800,20,'$'],['partyCost','Party delivery cost (share of price)',10,60,5,'%'],['teamOn','Company team days'],['teamDays','Team days / month',0,12,1,''],['teamPrice','Price / team day',200,2500,50,'$'],['teamCost','Team-day delivery cost (share of price)',10,60,5,'%'],['clipsOn','Sell highlight clips to players'],['clipPrice','Price / clip',2,20,1,'$'],['clipTake','Sessions that buy a clip',0,25,1,'%'],['peOn','School PE contracts (weekday daytime)'],['peSchools','Schools on a PE contract',0,10,1,''],['peHours','Court-hours / school / week',1,12,1,''],['peHourly','PE rate / court-hour',20,90,5,'$'],['packsOn','Hotel & visitor starter packs'],['packs','Packs / month',0,200,5,''],['packPrice','Price / pack',5,40,1,'$'],['classPackOn','Class packs (10 lessons at a discount)'],['classPackDisc','Class-pack discount',0,25,1,'%']]],
+ ['Prepaid products & public support',[['familyWalletOn','Family wallet (one pot, several players)'],['familyTopup','Family wallet top-up',100,1500,50,'$'],['familyShare','Members with a family wallet',0,60,5,'%'],['bizWalletOn','Company wallets'],['bizWallets','Companies with a wallet',0,25,1,''],['bizWalletValue','Annual credit per company',500,15000,500,'$'],['giftOn','Gift cards'],['gifts','Gift cards sold / month',0,150,5,''],['giftValue','Average gift card',20,200,10,'$'],['referralOn','Referral credit (both sides, paid in credit)'],['referralCredit','Credit per side',2,25,1,'$'],['custody','Prepaid customer money',-1,1,1,'custody'],['sponsorRenew','Sponsor renewal rate',40,100,5,'%'],['voucherOn','District sports vouchers (Shenzhen)'],['voucherValue','Voucher value per first visit',2,25,1,'$'],['sponsorTaxBreak','Junior-sponsor tax break: uplift on the rate card',0,30,5,'%'],['sportsRelief','Sports tax relief: uplift on coaching demand',0,20,1,'%'],['govRentSub','District venue fund: operating support, first 24 months',0,50,5,'%']]],
  ['Build & financing',[['buildOn','Build our own courts on empty land (instead of renting a facility with courts)'],['buildGround','Groundworks on empty land: slab, drainage, power, per court',0,60000,1000,'$'],['courtKit','Court kit + install, per court',8000,90000,1000,'$'],['roofCostCovered','Roof with open sides, per court',5000,120000,1000,'$'],['roofCostIndoor','Enclosed + AC fit-out, per court',10000,200000,1000,'$'],['buildRentCut','Running-cost saving when you own the courts',0,0.6,0.05,'f%'],['fitout','Clubhouse fit-out (reception, changing, café)',0,200000,5000,'$'],['preopen','Pre-opening (hiring, launch, legal)',0,100000,1000,'$'],['debtShare','Share of upfront spend borrowed',0,0.8,0.05,'f%'],['rate','Interest rate',0,0.2,0.005,'f%1'],['termYears','Loan term (years)',1,10,1,''],['exitMult','Exit value (× last-12-month EBITDA)',0,8,0.5,'x']]],
  ['Conversion site',[['convertOn','Convert an existing site (pick the kind below)'],['siteType','Kind of site'],['convHasRoof','Pitch already has a roof (covered futsal hall)'],['convSlabReuse','Existing concrete base can be levelled, not replaced'],['convClubReuse','Reuse the pitch site\'s reception, changing rooms, parking'],['convStrip','Strip turf, rebound boards, goals, per court',0,15000,500,'$'],['convSlab','New levelled slab + ring beam, per court',0,30000,500,'$'],['convLights','Court lighting + electrics, per court',0,10000,500,'$'],['convContingency','Contingency on site works',0,0.4,0.05,'f%'],['convRentCut','Running-cost saving vs renting a finished padel facility',0,0.6,0.05,'f%'],['convRevshare','Pay the pitch owner a revenue share instead of rent'],['ownerShare','Owner\'s share of court revenue',0.02,0.3,0.01,'f%'],['footfall','People already on site who could try padel / week',0,3000,50,''],['convHVAC','Cooling and ventilation, per court',0,40000,500,'$'],['convFitout','Clubhouse fit-out needed (share of a full one)',0,1,0.05,'f%'],['ownerCapex','Share of build paid by the host (school, mall)',0,1,0.05,'f%'],['closedDay','Host uses the courts on weekdays until 16:00'],['moveEvery','Move the courts every (months, 0 = never)',0,60,6,''],['moveTeardown','Take down, per court',0,15000,500,'$'],['moveBase','New base at the next site, per court',0,20000,500,'$'],['moveReinstall','Reinstall + transport, per court',0,15000,500,'$'],['moveRoof','Move the canopy, per court',0,30000,500,'$'],['moveKitLoss','Glass and parts lost per move (share of kit)',0,0.3,0.01,'f%'],['moveDown','Weeks closed per move',0,12,1,''],['moveChurn','Casual players lost per move',0,0.5,0.05,'f%']]],
  ['Buy or operate for an owner',[['acquireOn','Buy an existing, struggling club instead'],['acqPerCourt','Price paid per court',0,80000,1000,'$'],['acqRefurb','Refurbishment per court',0,30000,500,'$'],['acqPlayers','Players who come with the club',0,800,10,''],['mgmtFee','Our management fee on owner-funded courts (share of revenue)',0,0.2,0.01,'f%'],['mgmtIncentive','Our share of owner-funded club EBITDA',0,0.5,0.05,'f%']]],
@@ -303,15 +315,18 @@ const L=[ // group, id, label, min, max, step, unit
  ['Automation',[['smartAccess','Smart access, unstaffed 6–7am & 11pm'],['dynPricing','Dynamic pricing engine'],['replay','AI replay cameras ($6 a clip)'],['ballMachine','Ball-machine practice hire'],['vending','Smart vending: drinks, balls, grips']]]
 ];
 const OFF={starterOn:0,miniOn:0,familyOn:0,memOn:0,foundOn:0,walletOn:0,kidsOn:0,coachOn:0,socialsOn:0,tourOn:0,corpOn:0,sponsorOn:0,smartAccess:0,dynPricing:0,replay:0,ballMachine:0,vending:0,contentOn:0,proEvent:0,campsOn:0,kidsPrepay:0};
+const NROFF={racketOn:0,retailOn:0,cafeOn:0,cafeOwn:0,sponsorCardOn:0,passOn:0,starterPassOn:0,partyOn:0,teamOn:0,clipsOn:0,peOn:0,packsOn:0,classPackOn:0,familyWalletOn:0,bizWalletOn:0,giftOn:0,referralOn:0,voucherOn:0,sponsorTaxBreak:0,sportsRelief:0};
+const NRPLAN={racketOn:1,retailOn:1,cafeOn:1,sponsorCardOn:1,passOn:1,starterPassOn:1,partyOn:1,teamOn:1,clipsOn:1,peOn:1,packsOn:1,classPackOn:1,familyWalletOn:1,bizWalletOn:1,giftOn:1,referralOn:1};
 const PRESETS={
  'Full stack':{},
- 'Bare rental':Object.assign({},OFF,{mkt:500}),
+ 'Bare rental':Object.assign({},OFF,NROFF,{mkt:500}),
  'Community club':Object.assign({},OFF,{memOn:1,coachOn:1,socialsOn:1,socials:4,tourOn:1,contentOn:1,content:500,mkt:600}),
  'Kids first':Object.assign({},OFF,{kidsOn:1,schools:5,campsOn:1,kidsPrepay:1,coachOn:1,memOn:1,contentOn:1,content:300}),
  'Customer-funded launch':Object.assign({},OFF,{memOn:1,foundOn:1,foundSeats:200,foundPrice:420,annualShare:50,annualDisc:15,walletOn:1,walletBonus:12,kidsOn:1,kidsPrepay:1,schools:2,corpOn:1,corpBD:800,sponsorOn:1,sponsorCourts:3,contentOn:1,content:400}),
  'Accessible family club':Object.assign({},OFF,{starterOn:1,starterPerWeek:8,miniOn:1,familyOn:1,kidsOn:1,kidsFee:70,schools:4,campsOn:1,kidsPrepay:1,coachOn:1,memOn:1,memFee:35,annualShare:40,foundOn:1,foundPrice:300,walletOn:1,socialsOn:1,socials:4,socialFee:10,corpOn:1,sponsorOn:1,smartAccess:1,dynPricing:1,contentOn:1,content:400}),
  'Pitch conversion (family club)':Object.assign({},OFF,{starterOn:1,starterPerWeek:8,miniOn:1,familyOn:1,kidsOn:1,kidsFee:70,schools:4,campsOn:1,kidsPrepay:1,coachOn:1,memOn:1,memFee:35,annualShare:40,foundOn:1,foundPrice:300,walletOn:1,socialsOn:1,socials:4,socialFee:10,corpOn:1,sponsorOn:1,smartAccess:1,dynPricing:1,contentOn:1,content:400,capexMode:'convert'}),
- 'Automated lean':Object.assign({},OFF,{smartAccess:1,dynPricing:1,replay:1,ballMachine:1,vending:1,walletOn:1,memOn:1,mkt:700})
+ 'Automated lean':Object.assign({},OFF,{smartAccess:1,dynPricing:1,replay:1,ballMachine:1,vending:1,walletOn:1,memOn:1,mkt:700}),
+ 'Non-rental income plan':Object.assign({},OFF,NRPLAN,{starterOn:1,starterPerWeek:8,miniOn:1,familyOn:1,kidsOn:1,kidsFee:70,schools:4,campsOn:1,kidsPrepay:1,coachOn:1,memOn:1,memFee:35,annualShare:40,foundOn:1,foundPrice:300,walletOn:1,walletBonus:12,socialsOn:1,socials:4,socialFee:10,corpOn:1,corpBD:800,sponsorOn:1,sponsorCourts:3,replay:1,smartAccess:1,dynPricing:1,contentOn:1,content:400})
 };
 Object.assign(DEF,GDEF);
 let P=null;let cur='Accessible family club';
@@ -320,7 +335,7 @@ const save=()=>{try{localStorage.setItem('padelTycoon3',JSON.stringify({P,cur}))
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const LK=()=>LOCS[P.loc]||LOCS.shenzhen;
 const loc$=v=>{const L=LK(),x=v*L.fx;return L.ccy+(x>=10000?Math.round(x/1000).toLocaleString('en-US')+'k':Math.round(x/(x>=200?10:1))*(x>=200?10:1))};
-const fmtLv=(v,u,id)=>u==='$'?f$(v)+((id==='pricePeak'||id==='priceOff'||id==='memFee'||id==='kidsFee'||id==='starterPrice')&&LK().ccy!=='$'?` · ${loc$(v)}`:''):u==='%'?v+'%':u==='f%'?Math.round(v*100)+'%':u==='f%1'?(v*100).toFixed(1)+'%':u==='x'?(+v).toFixed(2)+'×':u==='f%1'?(v*100).toFixed(1)+'%':fn(v);
+const fmtLv=(v,u,id)=>u==='$'?f$(v)+((id==='pricePeak'||id==='priceOff'||id==='memFee'||id==='kidsFee'||id==='starterPrice'||id==='racketPrice'||id==='passPrice'||id==='partyPrice')&&LK().ccy!=='$'?` · ${loc$(v)}`:''):u==='%'?v+'%':u==='f%'?Math.round(v*100)+'%':u==='f%1'?(v*100).toFixed(1)+'%':u==='x'?(+v).toFixed(2)+'×':u==='custody'?(v<0?'auto — by city rule':v?'ring-fenced':'free to spend'):fn(v);
 const cityParams=(id,roof)=>{const L=LOCS[id],pr=ROOFS[roof].premium;return {proxOverride:null,calib:null,loc:id,roof,pricePeak:Math.round(L.peak*pr),priceOff:Math.round(L.off*pr),market:L.market,costIdx:L.costIdx,office:L.office,tourist:L.tourist,latent:L.latent,comp:L.comp,compGrowth:L.compGrowth,mktGrowth:L.mktGrowth,startPlayers:L.start||150,starterPrice:Math.max(3,Math.round(9*L.peak/42))}};
 const CITYKEYS=['proxOverride','calib','baseOpex','courts','loc','roof','pricePeak','priceOff','market','costIdx','office','tourist','latent','comp','compGrowth','mktGrowth','startPlayers','starterPrice'];
 const keepCity=()=>Object.fromEntries(CITYKEYS.map(k=>[k,P[k]]));
@@ -357,14 +372,14 @@ function applySite(k){const st=SITETYPES[k];if(!st)return;const old=ROOFS[P.roof
 $('reset').onclick=()=>{P=Object.assign({},DEF,PRESETS['Accessible family club'],cityParams('bangkok','covered'));cur='Accessible family club';renderLoc();renderLevers();run()};
 $('month').addEventListener('input',()=>{drawSheet();drawFunnel();drawHours()});
 
-const COL={rent:'#4a86f5',off:'#a8c5f7',tour:'#f4c38f',starter:'#38b26a',kids:'#dcef3c',social:'#f2694d',coach:'#17a196',corp:'#8b6bd9',auto:'#c9d3e6'};
-$('legend').innerHTML=[['rent','Peak rental'],['off','Off-peak rental'],['tour','Visitors'],['kids','Kids academy & camps'],['starter','Taster sessions'],['social','Socials & tournaments'],['coach','Coaching & ball machine'],['corp','Corporate']].map(([k,l])=>`<span><i style="background:${COL[k]}"></i>${l}</span>`).join('')+'<span><i style="background:rgba(3,12,38,.55);outline:1px solid rgba(255,255,255,.3)"></i>Empty</span><span><i style="background:#f2694d"></i>Weather row: demand lost to heat, cold or rain (weekday)</span>';
+const COL={rent:'#4a86f5',off:'#a8c5f7',tour:'#f4c38f',starter:'#38b26a',kids:'#dcef3c',social:'#f2694d',coach:'#17a196',corp:'#8b6bd9',pe:'#6fa84f',auto:'#c9d3e6'};
+$('legend').innerHTML=[['rent','Peak rental'],['off','Off-peak rental'],['tour','Visitors'],['kids','Kids academy & camps'],['starter','Taster sessions'],['social','Socials & tournaments'],['coach','Coaching & ball machine'],['corp','Corporate'],['pe','School PE']].map(([k,l])=>`<span><i style="background:${COL[k]}"></i>${l}</span>`).join('')+'<span><i style="background:rgba(3,12,38,.55);outline:1px solid rgba(255,255,255,.3)"></i>Empty</span><span><i style="background:#f2694d"></i>Weather row: demand lost to heat, cold or rain (weekday)</span>';
 $('revLegend').innerHTML=STREAMS.map(([,l,c])=>`<span><i style="background:${c}"></i>${l}</span>`).join('')+'<span><i style="background:none;border-top:2px dashed var(--coral);height:0;width:14px"></i>Opex</span>';
 
 let R=null,BASE=null;
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 function fig(svg,draw){const ro=new ResizeObserver(()=>draw(svg.clientWidth,svg.clientHeight));ro.observe(svg);return ()=>draw(svg.clientWidth,svg.clientHeight)}
-const TYPES=['kids','starter','social','corp','coach','tour','rent'];
+const TYPES=['kids','starter','social','corp','pe','coach','tour','rent'];
 const drawSheet=fig($('sheet'),(W,H)=>{if(!R||!W)return;const m=+$('month').value;const o=R.out[m];
   $('mLabel').textContent=`month ${m} (${MON[o.moy-1]}, ${o.T}°C highs, ${o.rd} rain days)`;
   const courts=R.p.courts,narrow=W<520,get=(dt,h)=>o.slots.find(x=>x.dt===dt&&x.h===h);
@@ -372,7 +387,7 @@ const drawSheet=fig($('sheet'),(W,H)=>{if(!R||!W)return;const m=+$('month').valu
   let s='';for(let h=6;h<=23;h++){if(!narrow||h%3===0)s+=`<text x="${lw+(h-6)*cw+cw/2}" y="14" fill="#c9d8f6" font-size="12" text-anchor="middle">${narrow?h:(h<10?'0':'')+h+':00'}</text>`}
   for(let d=0;d<7;d++){const y=top+d*rh,dt=d<5?'wd':'we';s+=`<text x="0" y="${y+rh/2+4}" fill="#fff" font-size="13" font-weight="600">${DAYS[d]}</text>`;
     for(let h=6;h<=23;h++){const x=lw+(h-6)*cw,sl=get(dt,h),ch=(rh-6)/courts;
-      const per=sl.days*WK,n={kids:sl.kids/per,starter:sl.starter/per,social:sl.social/per,corp:sl.corp/per,coach:sl.coach/per,tour:sl.tour/per,rent:(sl.rent-sl.tour)/per};
+      const per=sl.days*WK,n={kids:sl.kids/per,starter:sl.starter/per,social:sl.social/per,corp:sl.corp/per,pe:(sl.pe||0)/per,coach:sl.coach/per,tour:sl.tour/per,rent:(sl.rent-sl.tour)/per};
       const E=TYPES.reduce((a,k)=>a+n[k],0),u=((d*0.618+h*0.381)%1),busy=Math.min(courts,Math.floor(E+u));
       for(let c=0;c<courts;c++){let t=null;if(sl.open&&c<busy&&E>0){let acc=0;const target=(c+0.5)/busy*E;for(const k of TYPES){acc+=n[k];if(acc>=target){t=k;break}}t=t||'rent'}
         const col=t==='rent'?(sl.pk?COL.rent:COL.off):t?COL[t]:null;
@@ -576,7 +591,7 @@ $('calApply').onclick=()=>{const rows=$('calIn').value.trim().split(/\n+/).map(l
   renderLevers();run()};
 function bars(el,rows,max,fmt){el.innerHTML=rows.map(r=>`<div class="r"><span>${r.l}${r.tag?`<span class="tag">${r.tag}</span>`:''}</span><span class="t"><i style="left:${r.v<0?50-Math.min(50,Math.abs(r.v)/max*50):r.center?50:0}%;width:${Math.min(r.center?50:100,Math.abs(r.v)/max*(r.center?50:100))}%;background:${r.v<0?'var(--neg)':r.c||'var(--court)'}"></i></span><span class="v ${r.v<0?'neg':''}">${fmt(r.v)}${r.extra||''}</span></div>`).join('')}
 
-const MODS=[['starterOn','First Rally tasters'],['miniOn','Mini-padel for under-8s'],['familyOn','Family plans'],['memOn','Memberships'],['annualShare','Annual upfront memberships',0],['foundOn','Founding presale'],['walletOn','Prepaid wallets'],['kidsOn','Junior academy'],['schools','School partnerships',0],['campsOn','Holiday camps'],['kidsPrepay','Term prepay for academy'],['coachOn','Adult coaching'],['socialsOn','Americanas & socials'],['tourOn','Monthly tournament'],['corpOn','Corporate packages'],['sponsorOn','Court sponsors'],['contentOn','Content & social'],['proEvent','Pro exhibition'],['smartAccess','Smart access'],['dynPricing','Dynamic pricing'],['replay','AI replay cameras'],['ballMachine','Ball machine'],['vending','Smart vending']];
+const MODS=[['starterOn','First Rally tasters'],['miniOn','Mini-padel for under-8s'],['familyOn','Family plans'],['memOn','Memberships'],['annualShare','Annual upfront memberships',0],['foundOn','Founding presale'],['walletOn','Prepaid wallets'],['kidsOn','Junior academy'],['schools','School partnerships',0],['campsOn','Holiday camps'],['kidsPrepay','Term prepay for academy'],['coachOn','Adult coaching'],['socialsOn','Americanas & socials'],['tourOn','Monthly tournament'],['corpOn','Corporate packages'],['sponsorOn','Court sponsors'],['contentOn','Content & social'],['proEvent','Pro exhibition'],['smartAccess','Smart access'],['dynPricing','Dynamic pricing'],['replay','AI replay cameras'],['ballMachine','Ball machine'],['vending','Smart vending'],['racketOn','Racket hire'],['retailOn','Pro shop'],['cafeOn','Café & drinks'],['cafeOwn','Run the café ourselves'],['sponsorCardOn','Full sponsor rate card'],['passOn','Off-peak unlimited pass'],['partyOn','Birthday parties'],['teamOn','Company team days'],['clipsOn','Highlight clips'],['peOn','School PE contracts'],['packsOn','Hotel & visitor packs'],['familyWalletOn','Family wallets'],['bizWalletOn','Company wallets'],['giftOn','Gift cards'],['starterPassOn','Starter pass'],['classPackOn','Class packs'],['referralOn','Referral credit'],['voucherOn','District sports vouchers']];
 function impact(){const rows=MODS.map(([k,l,offV])=>{const on=!!P[k];const alt=Object.assign({},P,{[k]:on?(offV??0):(DEF[k]||1)});const r2=sim(alt);
    const dE=on?R.cumEbitda-r2.cumEbitda:r2.cumEbitda-R.cumEbitda;const dF=on?R.peakFloat-r2.peakFloat:r2.peakFloat-R.peakFloat;
    return {k,on,l,v:dE,dF,tag:on?'':'if added',extra:Math.abs(dF)>500?` <span class="tag">${dF>0?'+':'−'}${f$(Math.abs(dF))} prepaid</span>`:'',c:on?'var(--court)':'var(--auto)',center:1}}).sort((a,b)=>b.v-a.v);
@@ -648,8 +663,39 @@ function archetype(){const p=R.p,y1=R.years[0],o12=R.out[12];
   $('json').value=JSON.stringify(j,null,2);}
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('json').value);$('copied').textContent='Copied.'}catch(e){$('json').select();$('copied').textContent='Selected. Press Ctrl/Cmd+C.'}};
 
+// Non-rental income plan: the plan's own scorecard, and every new stream priced by the model.
+function nonRental(nrOff){
+  const n=R.nrYears,fm={pct:v=>pct(v),num:v=>fn(v),usd:v=>f$(v),usd2:v=>'$'+v.toFixed(2)};
+  $('nrKpis').innerHTML=R.kpis.map(k=>{
+    const tgt=k.band?`${fm[k.fmt](k.target)}–${fm[k.fmt](k.max)}`:fm[k.fmt](k.target)+(k.local?` (${k.local})`:'');
+    const how=k.pass?'met':(k.band?(k.v<k.target?'too low':'too high'):'short '+fm[k.fmt](k.target-k.v));
+    return `<div class="kpi ${k.pass?'hit':'miss'}"><b>${fm[k.fmt](k.v)}</b><span>${k.label}</span><span class="tgt">target ${tgt} · ${how}${k.src==='input'?' · assumption':''}</span></div>`}).join('');
+  const rows=[['racket','Racket hire'],['retail','Pro shop'],['cafe','Café & drinks'],['sponsorCard','Sponsor rate card, beyond court naming'],['team','Company team days'],['pass','Off-peak unlimited pass'],['starterPass','Starter pass'],['parties','Birthday parties'],['clips','Highlight clips'],['pe','School PE contracts'],['packs','Hotel & visitor packs'],['biz','Company wallets'],['gift','Gift cards'],['vouchers','District sports vouchers']];
+  const gross=y=>rows.reduce((a,[k])=>a+(y[k]||0),0);
+  const row=(l,f,cls='')=>`<tr class="${cls}"><td>${l}</td>${n.map((y,i)=>{const v=f(y,i);return`<td class="${v<0?'neg':''}">${f$(v)}</td>`}).join('')}</tr>`;
+  const live=rows.filter(([k])=>n.some(y=>y[k]>1));
+  $('nrTable').innerHTML=`<tr><th>Income the courts do not charge for</th>${n.map((_,i)=>`<th>Year ${i+1}</th>`).join('')}</tr>`
+    +(live.length?live.map(([k,l])=>row(l,y=>y[k]||0)).join(''):row('Nothing switched on yet',()=>0))
+    +row('Gross from the new streams',gross,'tot')
+    +row('Memo: paid off-peak given away to pass holders',y=>-(y.displaced||0))
+    +row('Memo: goods, café, party and team-day costs',y=>-(y.goods||0))
+    +row('Measured Δ EBITDA vs every stream off',(y,i)=>R.years[i].ebitda-nrOff.years[i].ebitda,'tot');
+  const d3=R.years[2].ebitda-nrOff.years[2].ebitda,met=R.kpis.filter(k=>k.pass).length;
+  $('nrLede').textContent=`Everything the club earns without renting a court, priced off the traffic the model already produces — ${fn(R.out[24].visits)} visits and ${fn(R.out[24].members)} members in month 24. Switching all of it off would cost ${f$(d3)} of year-3 EBITDA. ${met} of the plan's ${R.kpis.length} launch checks are met.`;
+  const bits=[`Take-up scales by the city add-on index (${R.addonIdx.toFixed(2)}× here): Bangkok 1.00, Shenzhen 0.90, Kuala Lumpur 0.80.`];
+  if(R.custody){const free=sim(Object.assign({},P,{custody:0}));
+    bits.push(`Prepaid customer money is ring-fenced in ${LK().city}: the ${f$(R.peakFloat)} of float is a liability, not funding, so it cannot pay for the build. That costs ${f$(free.minCash-R.minCash)} of extra owner cash — the lowest cash balance falls from ${f$(free.minCash)} to ${f$(R.minCash)}.`);}
+  else bits.push(`Prepaid float is treated as spendable here (${f$(R.peakFreeFloat)} available). Set "Prepaid customer money" to ring-fenced to test the Shenzhen rule.`);
+  bits.push('No grant in these three cities pays to build a private padel club: public money is modelled as operating support, first-visit vouchers and tax breaks, never as a cheaper build.');
+  if(P.govRentSub>0) bits.push(`District venue support is covering ${P.govRentSub}% of running cost for the first 24 months, paid after the fact.`);
+  if(P.loc==='shenzhen') bits.push('Shenzhen draft rules cap a single prepayment at ¥5,000 and 12 months; holding the money with a custodian exempts you from the caps, which is why custody is on by default here.');
+  bits.push('Δ EBITDA is measured by re-running with the streams off, so it carries the staff, coaching and variable costs too — the two memo rows above are not the whole cost.');
+  $('nrNote').textContent=bits.join(' ');
+}
+
 function runNow(){save();R=sim(P);const y=R.years,y3=y[2]||y[y.length-1],o24=R.out[24];
-  const bare=sim(Object.assign({},P,OFF,{mkt:P.mkt}));
+  const bare=sim(Object.assign({},P,OFF,NROFF,{mkt:P.mkt}));
+  const nrOff=sim(Object.assign({},P,NROFF));
   const L=LK();
   $('finding').textContent=R.breakEven?`${L.city}, ${R.p.courts} courts, ${ROOFS[R.p.roof].label.toLowerCase()}: break-even in month ${R.breakEven}, ${f$(y3.ebitda)} EBITDA by year 3`:`${L.city}, ${R.p.courts} courts, ${ROOFS[R.p.roof].label.toLowerCase()}: no break-even within three years at these settings`;
   $('subline').textContent=`Base running cost $${Math.round(R.p.baseOpex/1000)}k a year × ${R.p.costIdx.toFixed(2)} local cost index × ${ROOFS[R.p.roof].opex} for the roof. Rentals alone would make ${f$(bare.years[2].ebitda)} in year 3; everything above that comes from the upsells switched on in the levers.`;
@@ -659,9 +705,9 @@ function runNow(){save();R=sim(P);const y=R.years,y3=y[2]||y[y.length-1],o24=R.o
   $('revLede').textContent=`In year 3, court rentals are ${pct(share('courtPeak')+share('courtOff'))} of revenue; memberships, kids, coaching, events, B2B and automation make up the other ${pct(1-share('courtPeak')-share('courtOff'))}. The dashed line is total running cost.`;
   const pk=R.out.reduce((a,o)=>(o.float||0)>(a.float||0)?o:a,R.out[0]);
   $('floatLede').textContent=`Money customers hand over before they use it. It peaks at ${f$(R.peakFloat)} in month ${pk.m}, plus a ${f$(R.presale)} founding presale before opening.`;
-  const D=pk.def||{found:R.presale},FL=[['found','Founding presale'],['annual','Annual memberships'],['wallet','Wallet credit'],['kids','Academy terms'],['corp','Corporate packages'],['sponsor','Sponsor fees']].map(([k,l])=>({l,v:D[k]||0,c:'#f2694d'})).filter(r=>r.v>1);
+  const D=pk.def||{found:R.presale},FL=[['found','Founding presale'],['annual','Annual memberships'],['wallet','Wallet credit'],['kids','Academy terms'],['corp','Corporate packages'],['sponsor','Sponsor fees'],['family','Family wallets'],['biz','Company accounts'],['gift','Gift cards']].map(([k,l])=>({l,v:D[k]||0,c:'#f2694d'})).filter(r=>r.v>1);
   bars($('floatMix'),FL.length?FL:[{l:'No prepayment',v:0}],Math.max(...FL.map(r=>r.v),1),f$);
-  drawSheet();drawHours();drawRev();drawFloat();drawGrowth();drawFunnel();weatherTable();pnl();milestones();archetype();finance();
+  drawSheet();drawHours();drawRev();drawFloat();drawGrowth();drawFunnel();weatherTable();pnl();milestones();archetype();finance();nonRental(nrOff);
   // Comparison sections are ~20 simulations; they settle after the drag instead of on every tick.
   clearTimeout(run.t);run.t=setTimeout(()=>{const best=roofCards();const ir=impact();advice(ir,best);catalogue(ir);compare();sites();modeCmp();siteCmp();guild();network();catDigests();},90)}
 // Coalesce bursts of slider input into one render per frame.
@@ -700,10 +746,29 @@ const PLAYBOOK={
  smartAccess:{g:'Automation & cost',e:'Medium',s:0,d:'Unstaffed early and late hours, and roughly half the front-desk cost.'},
  replay:{g:'Automation & cost',e:'Medium',s:0,d:'AI replay cameras: a paid add-on per court-hour and a reason to share the club.'},
  ballMachine:{g:'Automation & cost',e:'Low',s:0,d:'Ball machine rental fills solo off-peak hours.'},
- vending:{g:'Automation & cost',e:'Low',s:0,d:'Smart vending: margin on drinks and balls with no staff attached.'}
+ vending:{g:'Automation & cost',e:'Low',s:0,d:'Smart vending: margin on drinks and balls with no staff attached.'},
+ racketOn:{g:'Shop & hospitality',e:'Low',s:400,d:'Loaner rackets at the desk. Beginners and visitors arrive without one, so this is the easiest add-on in the building — a rack, a deposit rule and a wipe-down.'},
+ retailOn:{g:'Shop & hospitality',e:'Low',s:1200,d:'Balls, grips, socks and tape at the till. Padel eats balls, so the repeat purchase is built in. Margin, not turnover, is the number to watch.'},
+ cafeOn:{g:'Shop & hospitality',e:'Low',s:1500,d:'Drinks and snacks. As a concession it is a fee on someone else\'s takings with no staff and no waste; run it yourself and you take the margin and the labour.'},
+ cafeOwn:{g:'Shop & hospitality',e:'High',s:4000,d:'Take the café in-house instead of letting a concession. You keep the whole gross margin but pay staff, stock and waste — at this club\'s footfall the model often says leave it to a concession.'},
+ sponsorCardOn:{g:'B2B & brand',e:'Medium',s:1200,d:'Stop selling only court naming. A rate card prices the academy title, kit, drinks fridge, league titles and the replay banner separately, so several sponsors pay instead of one.'},
+ passOn:{g:'Members & prepaid cash',e:'Low',s:300,d:'An off-peak-only unlimited pass. It monetises hours nobody buys and locks the member in — but every pass holder who would have paid anyway is revenue you gave away, so watch the displacement line.'},
+ starterPassOn:{g:'Kids & pipeline',e:'Medium',s:400,d:'Four coached beginner sessions a month, racket included. The step between a First Rally taster and a Family membership — it turns newcomers into paying regulars before they are ready to book courts themselves. It uses real coach hours.'},
+ teamOn:{g:'B2B & brand',e:'Medium',s:900,d:'Company team days: two hours, a coach, a tournament and food, sold to one buyer at a time. The highest price per court-hour in the building, and it lands in a weekend slot nobody else wants.'},
+ classPackOn:{g:'Members & prepaid cash',e:'Low',s:150,d:'Ten coaching sessions at a discount, or five tasters for the price of four. Trades a little margin for committed volume and cash up front.'},
+ referralOn:{g:'Members & prepaid cash',e:'Low',s:100,d:'Credit to both the player and the friend they bring — paid in credit, never cash, so it comes back as court time. The cheapest acquisition the club has.'},
+ voucherOn:{g:'B2B & brand',e:'Medium',s:300,d:'Sign up as a venue that accepts district sports vouchers (Nanshan, Pingshan). The government pays the discount on first visits, so it buys trial without cutting your price.'},
+ familyWalletOn:{g:'Members & prepaid cash',e:'Low',s:200,d:'One prepaid pot shared by a household. Bigger top-ups, cash earlier, and the whole family — not one player — has a reason to come back.'},
+ bizWalletOn:{g:'B2B & brand',e:'Medium',s:600,d:'Company credit accounts: the firm buys a block of credit, staff book against it. One invoice, one buyer, and the money arrives before the court is used.'},
+ giftOn:{g:'Members & prepaid cash',e:'Low',s:400,d:'Gift cards. Cash today, a new player through the door later, and a slice never redeemed. The cheapest acquisition channel a club has.'},
+ partyOn:{g:'Programming & yield',e:'Medium',s:800,d:'Birthdays and team days in a dead weekend slot: court, coach, rackets and a table. High price per hour, and every guest is a prospect.'},
+ clipsOn:{g:'Programming & yield',e:'Low',s:0,d:'Sell players the highlight clip the replay cameras already record. Near-zero marginal cost, and the clip advertises the club when it is shared.'},
+ peOn:{g:'Kids & pipeline',e:'Medium',s:600,d:'Contract weekday daytime courts to schools for PE. Paid, predictable, and it fills the hours adults never buy — but it occupies real capacity, so the model books it against the grid.'},
+ packsOn:{g:'Programming & yield',e:'Low',s:300,d:'Hotel and visitor starter packs: taster, racket hire and a drink in one price. Scales with visitor traffic, so it is worth far more in Bangkok than Shenzhen.'}
 };
-const OPTG=['Kids & pipeline','Members & prepaid cash','Programming & yield','B2B & brand','Automation & cost'];
-const modelCapex=k=>k==='smartAccess'?AUTO.smartAccess.capex:k==='replay'?AUTO.replay.capexCourt*P.courts:k==='ballMachine'?AUTO.ballMachine.capex:k==='vending'?AUTO.vending.capex:k==='starterOn'?2000:k==='miniOn'?1500:0;
+const OPTG=['Kids & pipeline','Members & prepaid cash','Programming & yield','B2B & brand','Shop & hospitality','Automation & cost'];
+const modelCapex=k=>k==='smartAccess'?AUTO.smartAccess.capex:k==='replay'?AUTO.replay.capexCourt*P.courts:k==='ballMachine'?AUTO.ballMachine.capex:k==='vending'?AUTO.vending.capex:k==='starterOn'?2000:k==='miniOn'?1500
+  :k==='racketOn'?NRCAPEX.racket*P.costIdx:k==='retailOn'?NRCAPEX.retail*P.costIdx:k==='cafeOwn'?NRCAPEX.cafeOwn*P.costIdx:k==='partyOn'?NRCAPEX.party*P.costIdx:k==='teamOn'?NRCAPEX.team*P.costIdx:k==='peOn'?NRCAPEX.pe*P.costIdx:k==='packsOn'?NRCAPEX.packs*P.costIdx:0;
 let OPTROWS=[];
 function catalogue(rows){
   if(rows)OPTROWS=rows;
@@ -739,7 +804,7 @@ const CATS=[
  {id:'overview',n:'Overview',d:'The headline, what to do next, and the milestones on the way',open:true,keys:['advice','ms']},
  {id:'actions',n:'Optimizations',d:'Every way to improve the operation, ranked by what it is worth',open:true,keys:['optList']},
  {id:'demand',n:'Demand & pricing',d:'Who plays, when, in what weather, against which competitors',keys:['wx','cmp']},
- {id:'revenue',n:'Revenue & customers',d:'Where the money comes from, and the cash customers hand over early',keys:['revChart','floatChart']},
+ {id:'revenue',n:'Revenue & customers',d:'Where the money comes from, and the cash customers hand over early',keys:['revChart','nrTable','floatChart']},
  {id:'capital',n:'Costs & capital',d:'What it costs to build, how it is funded, and the yearly accounts',keys:['finKpis','pnl']},
  {id:'growth',n:'Growth & portfolio',d:'Partner courts, more sites, and which kind of building to take',keys:['gKpis','netT','siteIn']},
  {id:'model',n:'Model & data',d:'Calibrate against real bookings, read the assumptions, export a scenario',keys:['calIn','assump','json']}
@@ -788,7 +853,7 @@ function catDigests(){
     overview:[['Break-even',R.breakEven?'month '+R.breakEven:'not in 36'],['Year 3 EBITDA',f$(y3.ebitda)],['Actions flagged',$('advice').children.length]],
     actions:[['Not yet switched on',OPTROWS.filter(r=>!r.on).length],['Best next move',notOn[0]?notOn[0].l:'—'],['Worth',notOn[0]?'+'+f$(notOn[0].v):'—']],
     demand:[[LK().city,R.p.courts+' courts'],['Peak full',pct(o24.peakFill)],['Off-peak full',pct(o24.offFill)]],
-    revenue:[['Rentals share of revenue',pct(rent)],['Peak prepaid float',f$(R.peakFloat)],['Presale',f$(R.presale)]],
+    revenue:[['Rentals share of revenue',pct(rent)],['Plan targets met',R.kpis.filter(k=>k.pass).length+' / '+R.kpis.length],['Peak prepaid float',f$(R.peakFloat)]],
     capital:[['Upfront',f$(F.capex||0)],['Owner money needed',f$(F.equity0||0)],['Lowest cash',f$(R.minCash)]],
     growth:[['Sites planned',(NET&&NET.length)||0],['Partner courts',P.guildOn?'on':'off'],['City',LK().city]],
     model:[['Calibrated',P.calib?'yes':'no'],['Levers changed',Object.keys(pDiff()).length],['Scenario','exportable']]
@@ -806,7 +871,21 @@ const LVWORDS={debtShare:'debt loan financing leverage borrow',rate:'debt loan i
  pricePeak:'pricing price',priceOff:'pricing price discount offpeak',memFee:'membership price',
  smartAccess:'staff staffing automation unstaffed',baseOpex:'costs overhead opex rent',extraCourtOpex:'costs overhead opex',
  sponsorOn:'b2b brand sponsorship',corpOn:'b2b corporate brand',contentOn:'brand audience marketing social',
- guildOn:'partner network franchise',demandScale:'calibration demand'};
+ guildOn:'partner network franchise',demandScale:'calibration demand',
+ racketOn:'hire rental equipment loaner nonrental addon',retailOn:'shop retail proshop balls grips merchandise nonrental addon',
+ cafeOn:'cafe coffee drinks food hospitality concession nonrental addon',cafeOwn:'cafe coffee drinks food hospitality staffing insource',
+ passOn:'offpeak pass unlimited subscription cannibalisation nonrental',passCannibal:'cannibalisation displacement offpeak lost revenue',
+ partyOn:'birthday party events kids hospitality nonrental',teamOn:'b2b corporate team day offsite company nonrental',
+ starterPassOn:'starter pass beginner coached ladder membership nonrental',classPackOn:'class pack coaching prepaid bundle discount',
+ referralOn:'referral credit friend acquisition wordofmouth',voucherOn:'government voucher subsidy shenzhen district public support',
+ sponsorRenew:'sponsor renewal retention ratecard',sponsorTaxBreak:'government tax deduction junior sponsor bangkok double',
+ sportsRelief:'government tax relief malaysia coaching demand',clipsOn:'video replay clips highlights content nonrental',
+ peOn:'school pe contract education daytime nonrental',packsOn:'hotel visitor tourist starter pack nonrental',
+familyWalletOn:'prepaid wallet family float cash upfront',
+ bizWalletOn:'b2b corporate credit account prepaid invoice float',giftOn:'gift card voucher prepaid breakage acquisition',
+ sponsorCardOn:'b2b brand sponsorship ratecard naming academy kit',sponsorCardValue:'b2b brand sponsorship ratecard price',
+ custody:'prepaid regulation custody ringfence escrow liability compliance shenzhen',
+ govRentSub:'government district venue fund subsidy operating incentive public support'};
 function filterLevers(q){
   q=(q||'').trim().toLowerCase();
   const groups=[...$('levers').querySelectorAll('details.g')];let shown=0,total=0;
