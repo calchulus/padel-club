@@ -69,3 +69,4 @@ const SITES = {
           {name:'Bangsar South', cost:65000, courts:3, roof:'covered', res:300000, off:150000, schools:3, comp:8},
           {name:'Damansara / PJ', cost:60000, courts:3, roof:'covered', res:450000, off:120000, schools:6, comp:12}]
 };
+if(typeof module!=='undefined'){ module.exports={LOCS,ROOFS,SITES}; }

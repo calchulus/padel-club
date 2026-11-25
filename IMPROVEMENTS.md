@@ -1,29 +1,23 @@
 # What to improve next
 
-Open work, ordered by what it is worth. Everything here is **not done**. Measured against the working tree on
+Open work, ordered by what it is worth. Everything here is **not done** unless marked otherwise. Measured against the working tree on
 25 Nov 2026 unless stated. Items 1–8 of `AUDIT.md` (P1 correctness, P2 fidelity) are fixed and verified;
 this file supersedes the old P3 list and adds what the non-rental work exposed.
 
 ## A. Correctness and trust — do these first
 
-### A1. There are no tests in the repo
-`tests/` does not exist. Every verification so far — the 30-combo city/roof sweep, the preset sweep, the
-scenario round-trip, the drag timing — ran from throwaway scripts in `/tmp` that were deleted. The next person
-to touch `engine.js` has no safety net, and the numbers in `AUDIT.md` cannot be re-checked.
+### A1. ~~There are no tests in the repo~~ — DONE 2026-11-25
 
-**Fix:** commit a `tests/` directory with the Playwright scripts and a Node engine-level test. The engine is
-requireable (`require('./locations.js')`), so most assertions need no browser: finite outputs across
-10 cities × 3 roofs, module toggles, calibration idempotency, custody on/off, round-trip of `pDiff`.
-Add `npm test`-free runner (`python3 tests/run.py` or `node tests/engine.test.js`) to keep the no-npm property.
+`tests/` now holds 307 assertions: `engine.test.js` (188, Node only, ~2s) and
+`browser_test.py` (119, Playwright). See `tests/README.md`. The engine suite runs in
+`.github/workflows/deploy.yml` before the build, so a broken model cannot deploy.
 
-Traps to encode in the tests, learned the hard way:
-- `P`, `R`, `PRESETS`, `MODS` are top-level lexicals and **not reachable from `page.evaluate`**. Drive the DOM.
-- `document.body.textContent` **includes the inline `<script>` source**, so a naive NaN/undefined scan always
-  reports false positives. Filter out `SCRIPT`/`STYLE` nodes.
-- `inner_text()` returns `''` inside a closed `<details>` — use `textContent`.
-- Controls sit behind two accordion layers: open `#cat-<id>`, then `el.closest('details.sub').open = true`.
-- The export's `overrides` is `{v, cur, p}` — the levers are one level down in `.p`.
-- The import box is `#imp`, not `#json` (that is the export).
+The eight testing traps are documented at the top of `browser_test.py` and in `tests/README.md`.
+The calibration-idempotency regression (AUDIT P1 #1) is now guarded: six identical fits must
+produce the same `demandScale`.
+
+Still open: the browser suite is not in CI (it needs Playwright + Chromium on the runner).
+Adding it would catch UI regressions before deploy, at roughly a minute of runner time.
 
 ### A2. The bundled preset JSON has drifted from the export format
 `bangkok_accessible_family_club.json` has 15 keys and **no `overrides` block**; the page now exports 16 keys
@@ -107,9 +101,8 @@ C1 and C2 are the highest value per line of code: this tool gets pasted into dec
 
 ## Suggested order
 
-1. **A1 tests** — everything else is riskier without them.
-2. **A2 preset JSON** + **C1/C2 print and meta** — small, contained, immediately visible.
-3. **A4 / A3** — make the scorecard's red cards either go green or explain themselves.
-4. **B1 / B2** — city-scaled volumes and the compliance panel.
-5. **C3 / C4** — mobile ergonomics.
-6. **D1** — side-by-side scenarios.
+1. **A2 preset JSON** + **C1/C2 print and meta** — small, contained, immediately visible.
+2. **A4 / A3** — make the scorecard's red cards either go green or explain themselves.
+3. **B1 / B2** — city-scaled volumes and the compliance panel.
+4. **C3 / C4** — mobile ergonomics.
+5. **D1** — side-by-side scenarios.

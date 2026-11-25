@@ -12,6 +12,7 @@ A 3-court padel club simulator (Tycoonify-style), focused on Bangkok (focus 1), 
 | `NON-RENTAL-PLAN.md` | The Non-Rental Income Plan mapped into the model: every stream, its levers, its formula, and measured output against the plan's own estimate |
 | `IMPROVEMENTS.md` | Open work, ordered by value |
 | `AUDIT.md` | Evidence-backed test audit (P1/P2 fixed and verified) |
+| `tests/` | 307 assertions, no npm: `node tests/engine.test.js` (model) and `python3 tests/browser_test.py` (page). See `tests/README.md` |
 
 Model outputs are estimates calibrated toward published benchmarks, not forecasts. Shenzhen prices and the competitor growth rates are assumptions.
 
@@ -29,6 +30,18 @@ Two accordion layers over one scroll, so the first read is a digest rather than 
 **Non-rental income** has its own section under Revenue & customers: the plan's eight launch checks (each marked as a simulated output or an assumption), a per-stream year-1/2/3 table, and the measured Δ EBITDA against every stream switched off. Racket hire, pro shop, café concession and the sponsor rate card default on; passes, parties, team days, school PE, own-run café and the prepaid products default off. The `Non-rental income plan` preset switches the whole playbook on. See `NON-RENTAL-PLAN.md`.
 
 **Scenarios** round-trip in full: `overrides` in the exported archetype carries every changed lever plus the network plan and site list. "Copy scenario link" puts the same state in a `#s=` URL hash (~950 chars) that restores in a fresh browser; the import box accepts either form.
+
+## Test
+
+```sh
+node tests/engine.test.js                  # model, Node only, ~2s
+python3 build.py && python3 -m http.server 8899 &
+python3 tests/browser_test.py --local      # page, needs Playwright + Chromium
+```
+
+No npm and no test framework. The engine suite runs in CI before every deploy; the browser
+suite defaults to the live site. `tests/README.md` lists the page's testing traps — read it
+before debugging a browser failure.
 
 ## Run locally
 

@@ -526,4 +526,4 @@ function runNetwork(sites, base, H){
   rows.sort((a,b)=>a.i-b.i);
   return {flow, ebitda, cum:cumS, peakNeed:-minCum, payback, years, rows, courts:rows.reduce((a,r)=>a+r.courts,0)};
 }
-if(typeof module!=='undefined'){ module.exports={sim,DEF,WK,weatherFactor,residentWeight,inR,SITETYPES,simGuild,runNetwork,cityP,KINDS,GDEF}; }
+if(typeof module!=='undefined'){ module.exports={sim,DEF,AUTO,NRCAPEX,WK,weatherFactor,residentWeight,inR,SITETYPES,simGuild,runNetwork,cityP,KINDS,GDEF}; }
